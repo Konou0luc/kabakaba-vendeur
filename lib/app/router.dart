@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../core/theme/app_colors.dart';
-import '../features/auth/data/vendor_auth_provider.dart';
-import '../features/auth/presentation/pages/vendor_login_page.dart';
+import '../features/auth/presentation/controllers/vendor_auth_controller.dart';
+import '../features/auth/presentation/pages/vendor_activation_page.dart';
+import '../features/auth/presentation/pages/vendor_pin_login_page.dart';
 import '../features/vendor/presentation/pages/vendor_dashboard_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authRefresh = ValueNotifier(
-    ref.read(vendorAuthProvider).isAuthenticated,
-  );
-  ref.listen(vendorAuthProvider, (_, auth) {
-    authRefresh.value = auth.isAuthenticated;
+  final authRefresh = ValueNotifier(ref.read(vendorAuthControllerProvider));
+  ref.listen(vendorAuthControllerProvider, (_, next) {
+    authRefresh.value = next;
   });
   ref.onDispose(authRefresh.dispose);
 
@@ -19,75 +19,54 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: authRefresh,
     initialLocation: '/',
     redirect: (context, state) {
-      final auth = ref.read(vendorAuthProvider);
+      final auth = ref.read(vendorAuthControllerProvider);
       final path = state.uri.path;
-      final isPublic = path == '/' || path == '/login';
-      if (path == '/') {
-        if (auth.isAuthenticated) return '/dashboard';
-        return '/login';
+
+      if (auth.isAuthenticated) {
+        if (path == '/' || path == '/activate' || path == '/pin') {
+          return '/dashboard';
+        }
+        return null;
       }
-      if (auth.isAuthenticated && path == '/login') return '/dashboard';
-      if (!auth.isAuthenticated && !isPublic) {
-        return '/login';
+
+      if (auth.status == VendorAuthStatus.needsPin) {
+        return path == '/pin' ? null : '/pin';
       }
-      return null;
+
+      return path == '/activate' ? null : '/activate';
     },
     routes: [
-      GoRoute(path: '/', builder: (_, __) => const _Bootstrap()),
-      GoRoute(path: '/login', builder: (_, __) => const VendorLoginPage()),
+      GoRoute(path: '/', builder: (context, state) => const _Bootstrap()),
+      GoRoute(
+        path: '/activate',
+        builder: (context, state) => const VendorActivationPage(),
+      ),
+      GoRoute(
+        path: '/pin',
+        builder: (context, state) => const VendorPinLoginPage(),
+      ),
       GoRoute(
         path: '/dashboard',
-        builder: (_, __) => const VendorDashboardPage(),
+        builder: (context, state) => const VendorDashboardPage(),
       ),
     ],
   );
 });
 
-class _Bootstrap extends ConsumerStatefulWidget {
+class _Bootstrap extends StatelessWidget {
   const _Bootstrap();
-  @override
-  ConsumerState<_Bootstrap> createState() => _BootstrapState();
-}
-
-class _BootstrapState extends ConsumerState<_Bootstrap> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _decide());
-  }
-
-  void _decide() {
-    final auth = ref.read(vendorAuthProvider);
-    if (auth.isAuthenticated) {
-      context.go('/dashboard');
-    } else {
-      context.go('/login');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AppColors.indigoDark,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Icon(
-                Icons.storefront_rounded,
-                color: Colors.white,
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text(
+            _BrandMark(),
+            SizedBox(height: 14),
+            Text(
               'kabakaba',
               style: TextStyle(
                 color: Colors.white,
@@ -95,8 +74,8 @@ class _BootstrapState extends ConsumerState<_Bootstrap> {
                 fontSize: 26,
               ),
             ),
-            const SizedBox(height: 4),
-            const Text(
+            SizedBox(height: 4),
+            Text(
               'ESPACE VENDEUR',
               style: TextStyle(
                 color: Color(0x99FFFFFF),
@@ -104,10 +83,31 @@ class _BootstrapState extends ConsumerState<_Bootstrap> {
                 letterSpacing: 2,
               ),
             ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(color: AppColors.accent),
+            SizedBox(height: 32),
+            CircularProgressIndicator(color: AppColors.accent),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BrandMark extends StatelessWidget {
+  const _BrandMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 70,
+      height: 70,
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: const Icon(
+        Icons.storefront_rounded,
+        color: Colors.white,
+        size: 36,
       ),
     );
   }

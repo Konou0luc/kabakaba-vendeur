@@ -18,83 +18,73 @@ class SectionTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surfaceLight,
-      child: Row(
-        children: List.generate(tabs.length, (index) {
+    return SizedBox(
+      height: 56,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        itemCount: tabs.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
           final tab = tabs[index];
           final selected = index == selectedIndex;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onTabSelected?.call(index),
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 12,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              tab.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: selected
-                                  ? AppTextStyles.tabActive
-                                  : AppTextStyles.tabLabel,
-                            ),
-                          ),
-                          if (tab.badgeCount != null)
-                            Container(
-                              margin: const EdgeInsets.only(left: 5),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: selected
-                                    ? AppColors.accent
-                                    : AppColors.grayLight,
-                              ),
-                              child: Text(
-                                tab.badgeCount.toString(),
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: selected
-                                      ? AppColors.white
-                                      : AppColors.textPrimaryLight,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      if (selected)
-                        Container(
-                          width: 30,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: AppColors.accent,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                    ],
-                  ),
+          return GestureDetector(
+            onTap: () => onTabSelected?.call(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.primary : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: selected ? AppColors.primary : AppColors.borderLight,
                 ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    tab.label,
+                    style: (selected
+                            ? AppTextStyles.tabActive
+                            : AppTextStyles.tabLabel)
+                        .copyWith(
+                          color: selected
+                              ? AppColors.white
+                              : AppColors.textSecondaryLight,
+                          fontSize: 13,
+                        ),
+                  ),
+                  if (tab.badgeCount != null && tab.badgeCount! > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.accent
+                            : AppColors.indigoLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${tab.badgeCount}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: selected
+                              ? AppColors.white
+                              : AppColors.textPrimaryLight,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           );
-        }),
+        },
       ),
     );
   }

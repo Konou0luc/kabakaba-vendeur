@@ -3,77 +3,47 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../models/order_model.dart';
 
+/// Pastille de statut d'une commande.
 class StatusBadge extends StatelessWidget {
   final OrderStatus status;
-  final bool isLight;
 
-  const StatusBadge({super.key, required this.status, this.isLight = false});
+  const StatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final config = _StatusConfig.fromStatus(status, isLight);
+    final (background, foreground) = _palette(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: config.bgColor,
+        color: background,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Text(
         status.label,
         style: AppTextStyles.statusBadge.copyWith(
-          color: config.textColor,
+          color: foreground,
           fontSize: 12.5,
         ),
       ),
     );
   }
-}
 
-class _StatusConfig {
-  final Color bgColor;
-  final Color textColor;
-
-  const _StatusConfig(this.bgColor, this.textColor);
-
-  factory _StatusConfig.fromStatus(OrderStatus status, bool isLight) {
-    switch (status) {
-      case OrderStatus.pending:
-        return _StatusConfig(
-          isLight ? AppColors.orangeLight : AppColors.orangeLight,
-          AppColors.accent,
-        );
-      case OrderStatus.accepted:
-      case OrderStatus.inPreparation:
-        return _StatusConfig(
-          isLight ? AppColors.indigoLight : AppColors.indigoLight,
-          AppColors.primary,
-        );
-      case OrderStatus.ready:
-        return _StatusConfig(
-          isLight ? AppColors.greenLight : AppColors.greenLight,
-          AppColors.green,
-        );
-      case OrderStatus.received:
-      case OrderStatus.autoReceived:
-        return _StatusConfig(
-          isLight ? AppColors.greenLight : AppColors.greenLight,
-          AppColors.green,
-        );
-      case OrderStatus.refused:
-        return _StatusConfig(
-          isLight ? AppColors.redLight : AppColors.redLight,
-          AppColors.red,
-        );
-      case OrderStatus.cancelledVendor:
-        return _StatusConfig(
-          isLight ? AppColors.grayLight : AppColors.grayLight,
-          AppColors.textSecondaryLight,
-        );
-      case OrderStatus.refunded:
-        return _StatusConfig(
-          isLight ? AppColors.orangeLight : AppColors.orangeLight,
-          AppColors.accent,
-        );
-    }
+  static (Color background, Color foreground) _palette(OrderStatus status) {
+    return switch (status) {
+      OrderStatus.pending => (AppColors.orangeLight, AppColors.accent),
+      OrderStatus.accepted ||
+      OrderStatus.inPreparation => (AppColors.indigoLight, AppColors.primary),
+      OrderStatus.ready ||
+      OrderStatus.received ||
+      OrderStatus.autoReceived => (AppColors.greenLight, AppColors.green),
+      OrderStatus.refused => (AppColors.redLight, AppColors.red),
+      OrderStatus.cancelledVendor ||
+      OrderStatus.cancelledStudent ||
+      OrderStatus.unknown => (
+        AppColors.grayLight,
+        AppColors.textSecondaryLight,
+      ),
+      OrderStatus.refunded => (AppColors.orangeLight, AppColors.accent),
+    };
   }
 }

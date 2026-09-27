@@ -6,14 +6,14 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/models/transaction_model.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/light_app_bar.dart';
-import '../../data/vendor_wallet_provider.dart';
+import '../../../wallet/data/transactions_repository.dart';
 
 class VendorTransactionHistoryPage extends ConsumerWidget {
   const VendorTransactionHistoryPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(vendorTransactionsProvider);
+    final async = ref.watch(transactionHistoryControllerProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Column(
@@ -30,8 +30,8 @@ class VendorTransactionHistoryPage extends ConsumerWidget {
                 child: Text('Historique indisponible',
                     style: AppTextStyles.emptySub),
               ),
-              data: (list) {
-                if (list.isEmpty) {
+              data: (page) {
+                if (page.items.isEmpty) {
                   return const EmptyState(
                     title: 'Aucune transaction',
                     subtitle: 'L\'historique apparaîtra ici.',
@@ -39,15 +39,35 @@ class VendorTransactionHistoryPage extends ConsumerWidget {
                   );
                 }
                 return RefreshIndicator(
-                  onRefresh: () async =>
-                      ref.refresh(vendorTransactionsProvider.future),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: list.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 10),
-                    itemBuilder: (_, i) =>
-                        _TxTile(transaction: list[i]),
+                  onRefresh: () => ref
+                      .read(transactionHistoryControllerProvider.notifier)
+                      .refresh(),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.metrics.extentAfter < 280 &&
+                          page.hasMore) {
+                        ref
+                            .read(
+                              transactionHistoryControllerProvider.notifier,
+                            )
+                            .loadMore();
+                      }
+                      return false;
+                    },
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: page.items.length + (page.hasMore ? 1 : 0),
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) {
+                        if (i >= page.items.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        return _TxTile(transaction: page.items[i]);
+                      },
+                    ),
                   ),
                 );
               },

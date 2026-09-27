@@ -7,8 +7,8 @@ import '../../../../shared/models/order_model.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_tabs.dart';
 import '../../../../shared/widgets/vendor_header.dart';
-import '../../../auth/data/vendor_auth_provider.dart';
-import '../../data/vendor_orders_notifier.dart';
+import '../../../orders/data/orders_repository.dart';
+import '../../data/vendor_profile_repository.dart';
 
 class VendorStatsPage extends ConsumerStatefulWidget {
   const VendorStatsPage({super.key});
@@ -21,7 +21,7 @@ class _VendorStatsPageState extends ConsumerState<VendorStatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(vendorOrdersNotifierProvider);
+    final async = ref.watch(vendorStatsOrdersProvider);
     final vendor = ref.watch(currentVendorProvider);
     return Column(
       children: [
@@ -70,7 +70,7 @@ class _VendorStatsPageState extends ConsumerState<VendorStatsPage> {
 
   List<Widget> _overviewBody(List<OrderModel> orders) {
     final done = orders.where((o) => o.status.isCompleted).toList();
-    final revenue = done.fold<int>(0, (s, o) => s + o.totalTickets);
+    final revenue = done.fold<double>(0, (s, o) => s + o.escrowAmount);
     final avg = done.isEmpty ? 0 : (revenue / done.length).round();
     final completionRate = orders.isEmpty
         ? 0

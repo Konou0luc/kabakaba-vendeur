@@ -1,75 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
+/// Indicateur de progression de la saisie du code PIN.
+///
+/// La position en cours est mise en avant (halo + contour épaissi) pour que le
+/// vendeur suive sa frappe sans voir les chiffres.
 class PinDots extends StatelessWidget {
   final String pin;
   final int length;
-  final Color fillColor;
-  final Color borderColor;
-  final Color activeBorderColor;
-  final double size;
-  final double activeSize;
+
+  /// Contour des positions non encore saisies. Le fond sombre de l'écran
+  /// d'activation et le fond clair du reste de l'app n'ont pas le même.
+  final Color emptyBorderColor;
 
   const PinDots({
     super.key,
     required this.pin,
     this.length = 4,
-    this.fillColor = AppColors.accent,
-    this.borderColor = AppColors.line,
-    this.activeBorderColor = AppColors.accent,
-    this.size = 15,
-    this.activeSize = 17,
+    this.emptyBorderColor = AppColors.borderLight,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveBorderColor = isDark ? borderColor : AppColors.borderLight;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(length, (index) {
-        final filled = index < pin.length;
-        final isActive = index == pin.length;
-        final dotSize = (filled || isActive) ? activeSize : size;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOutCubic,
-          width: dotSize,
-          height: dotSize,
-          margin: EdgeInsets.only(right: index < length - 1 ? 18.0 : 0),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: filled
-                ? fillColor
-                : (isActive ? Colors.transparent : Colors.transparent),
-            border: Border.all(
-              color: filled
-                  ? fillColor
-                  : (isActive ? activeBorderColor : effectiveBorderColor),
-              width: isActive && !filled ? 2 : 1.5,
-            ),
-            boxShadow: isActive && !filled
-                ? [
-                    BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.18),
-                      blurRadius: 0,
-                      spreadRadius: 4,
-                    ),
-                  ]
-                : null,
-          ),
-        );
-      }),
-    );
-  }
-}
-
-class PinDotsLight extends StatelessWidget {
-  final String pin;
-  final int length;
-
-  const PinDotsLight({super.key, required this.pin, this.length = 4});
+  static const _idleSize = 15.0;
+  static const _focusedSize = 17.0;
 
   @override
   Widget build(BuildContext context) {
@@ -77,19 +29,29 @@ class PinDotsLight extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(length, (index) {
         final filled = index < pin.length;
+        final isNext = index == pin.length;
+
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
-          width: filled ? 14 : 14,
-          height: filled ? 14 : 14,
-          margin: EdgeInsets.only(right: index < length - 1 ? 16.0 : 0),
+          width: filled || isNext ? _focusedSize : _idleSize,
+          height: filled || isNext ? _focusedSize : _idleSize,
+          margin: EdgeInsets.only(right: index < length - 1 ? 18 : 0),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: filled ? AppColors.accent : Colors.transparent,
             border: Border.all(
-              color: filled ? AppColors.accent : AppColors.borderLight,
-              width: 1.5,
+              color: filled || isNext ? AppColors.accent : emptyBorderColor,
+              width: isNext ? 2 : 1.5,
             ),
+            boxShadow: isNext
+                ? [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.18),
+                      spreadRadius: 4,
+                    ),
+                  ]
+                : null,
           ),
         );
       }),

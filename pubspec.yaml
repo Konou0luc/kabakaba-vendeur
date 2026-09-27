@@ -11,35 +11,24 @@ dependencies:
     sdk: flutter
   go_router: ^14.8.0
   flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
   dio: ^5.8.0+1
-  json_annotation: ^4.9.0
-  flutter_animate: ^4.5.2
   google_fonts: ^6.2.1
-  flutter_svg: ^2.0.17
-  shimmer: ^3.0.0
-  hugeicons: ^1.1.7
-  fluttertoast: ^8.2.11
   intl: ^0.20.2
-  fpdart: ^0.6.0
   shared_preferences: ^2.3.2
-  flutter_dotenv: ^5.2.1
   pretty_dio_logger: ^1.4.0
-  cupertino_icons: ^1.0.8
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: ^2.4.15
-  riverpod_generator: ^2.6.4
-  json_serializable: ^6.9.3
   flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
 
+  # La configuration (URL d'API, environnement) passe par --dart-define, pas
+  # par un .env embarqué : un asset est extractible de l'APK et ne permet
+  # aucune séparation dev / staging / prod. Voir lib/core/config/app_config.dart.
   assets:
-    - .env
     - assets/images/
     - assets/icons/
-    - assets/fonts/

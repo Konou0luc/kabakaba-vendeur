@@ -1,3 +1,27 @@
+import '../../core/network/json_reader.dart';
+
+class CampusModel {
+  final String id;
+  final String name;
+  final String? city;
+  final String? institution;
+
+  const CampusModel({
+    required this.id,
+    required this.name,
+    this.city,
+    this.institution,
+  });
+
+  factory CampusModel.fromJson(Map<String, dynamic> json) => CampusModel(
+    id: json.stringOr('id', ''),
+    name: json.stringOr('name', ''),
+    city: json.optionalString('city'),
+    institution: json.optionalString('institution'),
+  );
+}
+
+/// Profil de la cantine, tel que renvoyé par `GET /vendors/me`.
 class VendorModel {
   final String id;
   final String userId;
@@ -5,14 +29,29 @@ class VendorModel {
   final String? logoUrl;
   final String? bannerUrl;
   final String? description;
+
+  /// Solde retirable, en FCFA.
   final double balanceFcfa;
+
+  /// Créance ouverte : kabakaba a avancé un remboursement à un étudiant.
   final double debtFcfa;
+
+  /// Compte actif côté plateforme. `false` = suspendu par un administrateur.
   final bool isActive;
+
+  /// Cantine ouverte aux commandes, basculable par le vendeur.
   final bool isOpen;
-  final String campusId;
-  final String campusName;
+
+  /// Calculé par le serveur (`debtFcfa > 0`).
+  ///
+  /// C'est cette valeur qui décide de l'accès au retrait, jamais un
+  /// recalcul local : la règle appartient au backend et peut évoluer.
+  final bool withdrawalBlocked;
+
+  final List<CampusModel> campuses;
   final String? phone;
-  final String? address;
+  final DateTime? suspendedAt;
+  final String? suspensionReason;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -27,79 +66,64 @@ class VendorModel {
     required this.debtFcfa,
     required this.isActive,
     required this.isOpen,
-    required this.campusId,
-    required this.campusName,
+    required this.withdrawalBlocked,
+    this.campuses = const [],
     this.phone,
-    this.address,
+    this.suspendedAt,
+    this.suspensionReason,
     required this.createdAt,
     required this.updatedAt,
   });
 
+  String get campusName => campuses.isEmpty ? '' : campuses.first.name;
+
+  /// Initiales de la cantine, pour l'avatar par défaut.
   String get initials {
-    final parts = canteenName.split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    if (parts.isNotEmpty && parts[0].isNotEmpty) {
-      return parts[0][0].toUpperCase();
-    }
-    return '?';
+    final words = canteenName
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return '?';
+    if (words.length == 1) return words.first[0].toUpperCase();
+    return '${words[0][0]}${words[1][0]}'.toUpperCase();
   }
 
-  factory VendorModel.fromJson(Map<String, dynamic> json) => VendorModel(
-    id: (json['id'] ?? json['vendorId']) as String,
-    userId: (json['userId'] ?? '') as String,
-    canteenName: (json['canteenName'] ?? json['name']) as String,
-    logoUrl: json['logoUrl'] as String?,
-    bannerUrl: json['bannerUrl'] as String?,
-    description: json['description'] as String?,
-    balanceFcfa: (json['balanceFcfa'] as num).toDouble(),
-    debtFcfa: (json['debtFcfa'] as num).toDouble(),
-    isActive: (json['isActive'] ?? json['isAvailable']) as bool,
-    isOpen: json['isOpen'] as bool,
-    campusId: (json['campusId'] ?? '') as String,
-    campusName: _campusNameFromJson(json),
-    phone:
-        json['phone'] as String? ?? (json['user'] as Map?)?['phone'] as String?,
-    address: json['address'] as String?,
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    updatedAt: DateTime.parse(json['updatedAt'] as String),
-  );
+  /// Le vendeur peut-il demander un retrait ?
+  bool get canWithdraw => isActive && !withdrawalBlocked && balanceFcfa > 0;
 
-  static String _campusNameFromJson(Map<String, dynamic> json) {
-    final campuses = json['campuses'];
-    final firstCampus = campuses is List && campuses.isNotEmpty
-        ? campuses.first
-        : null;
-    return (json['campusName'] ??
-            (json['campus'] as Map?)?['name'] ??
-            (firstCampus as Map?)?['name'] ??
-            '')
-        as String;
+  factory VendorModel.fromJson(Map<String, dynamic> json) {
+    final campuses = json
+        .nestedList('campuses')
+        .map(CampusModel.fromJson)
+        .toList(growable: false);
+
+    return VendorModel(
+      id: json.requireString('id'),
+      userId: json.stringOr('userId', ''),
+      canteenName: json.stringOr('canteenName', 'Ma cantine'),
+      logoUrl: json.optionalString('logoUrl'),
+      bannerUrl: json.optionalString('bannerUrl'),
+      description: json.optionalString('description'),
+      balanceFcfa: json.decimalOr('balanceFcfa', 0),
+      debtFcfa: json.decimalOr('debtFcfa', 0),
+      isActive: json.boolOr('isActive', true),
+      isOpen: json.boolOr('isOpen', false),
+      // Repli sur la règle serveur connue si le champ manque, plutôt que
+      // d'autoriser un retrait par défaut.
+      withdrawalBlocked: json.boolOr(
+        'withdrawalBlocked',
+        json.decimalOr('debtFcfa', 0) > 0,
+      ),
+      campuses: campuses,
+      phone: json.optionalString('phone'),
+      suspendedAt: json.optionalDateTime('suspendedAt'),
+      suspensionReason: json.optionalString('suspensionReason'),
+      createdAt: json.requireDateTime('createdAt'),
+      updatedAt: json.requireDateTime('updatedAt'),
+    );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'userId': userId,
-    'canteenName': canteenName,
-    if (logoUrl != null) 'logoUrl': logoUrl,
-    if (bannerUrl != null) 'bannerUrl': bannerUrl,
-    if (description != null) 'description': description,
-    'balanceFcfa': balanceFcfa,
-    'debtFcfa': debtFcfa,
-    'isActive': isActive,
-    'isOpen': isOpen,
-    'campusId': campusId,
-    'campusName': campusName,
-    if (phone != null) 'phone': phone,
-    if (address != null) 'address': address,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
-  };
 
   VendorModel copyWith({
-    String? id,
-    String? userId,
     String? canteenName,
     String? logoUrl,
     String? bannerUrl,
@@ -108,16 +132,11 @@ class VendorModel {
     double? debtFcfa,
     bool? isActive,
     bool? isOpen,
-    String? campusId,
-    String? campusName,
-    String? phone,
-    String? address,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    bool? withdrawalBlocked,
   }) {
     return VendorModel(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
+      id: id,
+      userId: userId,
       canteenName: canteenName ?? this.canteenName,
       logoUrl: logoUrl ?? this.logoUrl,
       bannerUrl: bannerUrl ?? this.bannerUrl,
@@ -126,12 +145,13 @@ class VendorModel {
       debtFcfa: debtFcfa ?? this.debtFcfa,
       isActive: isActive ?? this.isActive,
       isOpen: isOpen ?? this.isOpen,
-      campusId: campusId ?? this.campusId,
-      campusName: campusName ?? this.campusName,
-      phone: phone ?? this.phone,
-      address: address ?? this.address,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      withdrawalBlocked: withdrawalBlocked ?? this.withdrawalBlocked,
+      campuses: campuses,
+      phone: phone,
+      suspendedAt: suspendedAt,
+      suspensionReason: suspensionReason,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }

@@ -4,8 +4,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/kaba_button.dart';
-import '../../../auth/data/vendor_auth_provider.dart';
-import '../../data/vendor_wallet_provider.dart';
+import '../../../wallet/data/transactions_repository.dart';
+import '../../data/vendor_profile_repository.dart';
 
 class VendorWithdrawSuccessPage extends ConsumerStatefulWidget {
   final int amount;
@@ -29,7 +29,8 @@ class _VendorWithdrawSuccessPageState
     super.initState();
     Future.microtask(() {
       ref.invalidate(currentVendorProvider);
-      ref.invalidate(vendorTransactionsProvider);
+      ref.invalidate(recentTransactionsProvider);
+      ref.invalidate(transactionHistoryControllerProvider);
     });
   }
 

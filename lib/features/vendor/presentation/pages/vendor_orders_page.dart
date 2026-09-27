@@ -9,10 +9,14 @@ import '../../../../shared/widgets/bottom_sheet_modal.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_tabs.dart';
 import '../../../../shared/widgets/status_badge.dart';
+import '../../../../core/network/api_exception.dart';
+import '../../../../core/network/paginated.dart';
 import '../../../../shared/widgets/vendor_header.dart';
-import '../../../auth/data/vendor_auth_provider.dart';
-import '../../../auth/data/vendor_auth_repository.dart';
-import '../../data/vendor_orders_notifier.dart';
+import '../../../notifications/data/notifications_repository.dart';
+import '../../../notifications/presentation/pages/vendor_notifications_page.dart';
+import '../../../orders/data/orders_repository.dart';
+import '../../../orders/presentation/controllers/vendor_orders_controller.dart';
+import '../../data/vendor_profile_repository.dart';
 
 class VendorOrdersPage extends ConsumerStatefulWidget {
   const VendorOrdersPage({super.key});
@@ -22,54 +26,75 @@ class VendorOrdersPage extends ConsumerStatefulWidget {
 
 class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
   int _tab = 0;
+
+  OrderBucket get _bucket => OrderBucket.values[_tab];
+
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(vendorOrdersNotifierProvider);
     final vendor = ref.watch(currentVendorProvider);
-
-    final all = async.maybeWhen(data: (l) => l, orElse: () => <OrderModel>[]);
-    final newOrders = all.where((o) => o.status.isIncoming).toList();
-    final preparing = all.where((o) => o.status.isPreparing).toList();
-    final ready = all.where((o) => o.status.isReady).toList();
-    final history = all
-        .where((o) => o.status.isCompleted || o.status.isCancelledOrRefused)
-        .toList();
-
-    final tabs = <List<OrderModel>>[newOrders, preparing, ready, history];
+    final current = ref.watch(vendorOrdersControllerProvider(_bucket));
+    final counts = {
+      for (final bucket in OrderBucket.values)
+        bucket: ref
+            .watch(vendorOrdersControllerProvider(bucket))
+            .maybeWhen(data: (page) => page.total, orElse: () => 0),
+    };
 
     return Column(
       children: [
         VendorHeader(
           vendor: vendor.maybeWhen(data: (v) => v, orElse: () => null),
+          showNotification: true,
+          hasUnreadNotifications:
+              ref.watch(unreadNotificationsCountProvider) > 0,
+          onNotificationTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const VendorNotificationsPage(),
+              ),
+            );
+          },
           onAvailabilityTap: () => _showAvailabilityDialog(),
         ),
         SectionTabs(
           tabs: [
-            TabItem(label: 'Nouvelles', badgeCount: newOrders.length),
-            TabItem(label: 'Préparation', badgeCount: preparing.length),
-            TabItem(label: 'Prêtes', badgeCount: ready.length),
-            TabItem(label: 'Historique'),
+            TabItem(
+              label: 'Nouvelles',
+              badgeCount: counts[OrderBucket.incoming] ?? 0,
+            ),
+            TabItem(
+              label: 'Préparation',
+              badgeCount: counts[OrderBucket.preparing] ?? 0,
+            ),
+            TabItem(
+              label: 'Prêtes',
+              badgeCount: counts[OrderBucket.ready] ?? 0,
+            ),
+            const TabItem(label: 'Historique'),
           ],
           selectedIndex: _tab,
           onTabSelected: (i) => setState(() => _tab = i),
         ),
         Expanded(
           child: RefreshIndicator(
-            onRefresh: () =>
-                ref.read(vendorOrdersNotifierProvider.notifier).refresh(),
-            child: async.when(
+            onRefresh: () => ref
+                .read(vendorOrdersControllerProvider(_bucket).notifier)
+                .refresh(),
+            child: current.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ListView(
+              error: (error, _) => ListView(
                 children: [
                   const SizedBox(height: 80),
                   EmptyState(
                     title: 'Impossible de charger les commandes',
-                    subtitle: 'Tire vers le bas pour réessayer.',
+                    subtitle: error is ApiException
+                        ? error.message
+                        : 'Tire vers le bas pour réessayer.',
                     icon: Icons.cloud_off_rounded,
                   ),
                 ],
               ),
-              data: (_) => _buildList(tabs[_tab], isHistory: _tab == 3),
+              data: (page) => _buildList(page, isHistory: _tab == 3),
             ),
           ),
         ),
@@ -78,7 +103,7 @@ class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
   }
 
   void _showAvailabilityDialog() async {
-    final repo = ref.read(vendorAuthRepositoryProvider);
+    final repo = ref.read(vendorProfileRepositoryProvider);
     final vendor = ref.read(currentVendorProvider).value;
     if (vendor == null) return;
     final result = await showDialog<bool>(
@@ -87,7 +112,7 @@ class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
     );
     if (result != null) {
       try {
-        await repo.toggleAvailability(result);
+        await repo.setOpen(result);
         ref.invalidate(currentVendorProvider);
       } catch (e) {
         if (mounted) {
@@ -99,7 +124,8 @@ class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
     }
   }
 
-  Widget _buildList(List<OrderModel> items, {bool isHistory = false}) {
+  Widget _buildList(Paginated<OrderModel> page, {bool isHistory = false}) {
+    final items = page.items;
     if (items.isEmpty) {
       final subtitles = [
         'Les commandes des étudiants apparaîtront ici dès qu\'ils passeront commande.',
@@ -120,13 +146,29 @@ class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
         ],
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => isHistory
-          ? _HistoryCard(order: items[i])
-          : _OrderCard(order: items[i]),
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.extentAfter < 280 && page.hasMore) {
+          ref.read(vendorOrdersControllerProvider(_bucket).notifier).loadMore();
+        }
+        return false;
+      },
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: items.length + (page.hasMore ? 1 : 0),
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (_, i) {
+          if (i >= items.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return isHistory
+              ? _HistoryCard(order: items[i])
+              : _OrderCard(order: items[i]);
+        },
+      ),
     );
   }
 }
@@ -141,6 +183,12 @@ class _OrderCard extends ConsumerStatefulWidget {
 class _OrderCardState extends ConsumerState<_OrderCard> {
   late int _remainingSeconds;
   Timer? _timer;
+
+  VendorOrdersController get _orders {
+    final bucket =
+        OrderBucket.forStatus(widget.order.status) ?? OrderBucket.incoming;
+    return ref.read(vendorOrdersControllerProvider(bucket).notifier);
+  }
 
   @override
   void initState() {
@@ -195,9 +243,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     );
     if (result != null && context.mounted) {
       try {
-        await ref
-            .read(vendorOrdersNotifierProvider.notifier)
-            .refuse(widget.order.id, result);
+        await _orders.refuse(widget.order.id, result);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -228,9 +274,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     );
     if (result != null && context.mounted) {
       try {
-        await ref
-            .read(vendorOrdersNotifierProvider.notifier)
-            .cancel(widget.order.id, result);
+        await _orders.cancel(widget.order.id, result);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -265,9 +309,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     );
     if (result != null && context.mounted) {
       try {
-        await ref
-            .read(vendorOrdersNotifierProvider.notifier)
-            .refund(widget.order.id);
+        await _orders.refund(widget.order.id, result);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -283,7 +325,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-    final packaging = order.packaging?.label ?? 'Sur place';
+    final packaging = order.packagingName ?? 'Sur place';
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -336,7 +378,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   ),
                 )
               else
-                StatusBadge(status: order.status, isLight: true),
+                StatusBadge(status: order.status),
             ],
           ),
           const SizedBox(height: 10),
@@ -396,9 +438,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     color: AppColors.green,
                     onPressed: () async {
                       try {
-                        await ref
-                            .read(vendorOrdersNotifierProvider.notifier)
-                            .accept(order.id);
+                        await _orders.accept(order.id);
                       } catch (e) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -415,7 +455,40 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 ),
               ],
             ),
-          ] else if (order.status.isPreparing) ...[
+          ] else if (order.status == OrderStatus.accepted) ...[
+            _Timeline(currentStep: 2),
+            const SizedBox(height: 12),
+            _FilledAction(
+              label: 'Commencer la préparation',
+              icon: Icons.soup_kitchen_rounded,
+              color: AppColors.primary,
+              onPressed: () async {
+                try {
+                  await _orders.startPreparing(order.id);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e is ApiException
+                              ? e.message
+                              : 'Mise à jour impossible.',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+            _OutlineAction(
+              label: 'Annuler la commande',
+              icon: Icons.close_rounded,
+              color: AppColors.red,
+              borderColor: const Color(0xFFFECACA),
+              onPressed: _showCancelSheet,
+            ),
+          ] else if (order.status == OrderStatus.inPreparation) ...[
             _Timeline(currentStep: 2),
             const SizedBox(height: 12),
             _FilledAction(
@@ -424,13 +497,17 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               color: AppColors.accent,
               onPressed: () async {
                 try {
-                  await ref
-                      .read(vendorOrdersNotifierProvider.notifier)
-                      .markReady(order.id);
+                  await _orders.markReady(order.id);
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Mise à jour impossible.')),
+                      SnackBar(
+                        content: Text(
+                          e is ApiException
+                              ? e.message
+                              : 'Mise à jour impossible.',
+                        ),
+                      ),
                     );
                   }
                 }
@@ -457,7 +534,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           ] else ...[
             Row(
               children: [
-                StatusBadge(status: order.status, isLight: true),
+                StatusBadge(status: order.status),
                 const Spacer(),
                 Text(
                   CurrencyFormatter.formatTickets(order.totalTickets),
@@ -491,13 +568,15 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       case OrderStatus.refused:
         return AppColors.red;
       case OrderStatus.cancelledVendor:
+      case OrderStatus.cancelledStudent:
+      case OrderStatus.unknown:
         return AppColors.textSecondaryLight;
     }
   }
 
   String _orderMeta(OrderModel o) {
-    if (o.status.isPreparing && o.acceptedAt != null) {
-      return 'Acceptée à ${_formatTime(o.acceptedAt!)}';
+    if (o.status.isPreparing) {
+      return '${o.studentName} · ${o.totalArticles} article${o.totalArticles > 1 ? 's' : ''}';
     }
     if (o.status.isReady && o.readyAt != null) {
       final ago = DateTime.now().difference(o.readyAt!);
@@ -574,7 +653,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                 ),
               ),
               const SizedBox(width: 8),
-              StatusBadge(status: order.status, isLight: true),
+              StatusBadge(status: order.status),
               const SizedBox(width: 6),
               GestureDetector(
                 onTap: () => setState(() => _open = !_open),
@@ -612,7 +691,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                     ),
                   _DetailRow(
                     'Conditionnement',
-                    order.packaging?.label ?? 'Sur place',
+                    order.packagingName ?? 'Sur place',
                   ),
                   _DetailRow(
                     'Montant',
@@ -626,7 +705,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                               ? 'Manuelle par l\'étudiant'
                               : '—'),
                   ),
-                  if (order.refusalReason != null) ...[
+                  if (order.reason != null) ...[
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(10),
@@ -638,8 +717,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                       ),
                       child: Text(
                         order.status == OrderStatus.refunded
-                            ? 'Remboursement : ${order.refusalReason}'
-                            : 'Motif : ${order.refusalReason}',
+                            ? 'Remboursement : ${order.reason}'
+                            : 'Motif : ${order.reason}',
                         style: TextStyle(
                           fontSize: 13,
                           color: order.status == OrderStatus.refunded

@@ -5,8 +5,13 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/vendor_model.dart';
 import '../../../../shared/widgets/vendor_header.dart';
-import '../../../auth/data/vendor_auth_provider.dart';
-import '../../../auth/data/vendor_auth_repository.dart';
+import '../../../auth/presentation/controllers/vendor_auth_controller.dart';
+import '../../../auth/presentation/pages/vendor_activation_page.dart';
+import '../../../catalog/presentation/pages/vendor_menu_page.dart';
+import '../../../notifications/data/notifications_repository.dart';
+import '../../../notifications/presentation/pages/vendor_notifications_page.dart';
+import '../../../schedules/presentation/pages/vendor_schedules_page.dart';
+import '../../data/vendor_profile_repository.dart';
 
 class VendorProfilePage extends ConsumerWidget {
   const VendorProfilePage({super.key});
@@ -15,7 +20,19 @@ class VendorProfilePage extends ConsumerWidget {
     final vendorAsync = ref.watch(currentVendorProvider);
     return Column(
       children: [
-        VendorHeader(vendor: vendorAsync.value),
+        VendorHeader(
+          vendor: vendorAsync.value,
+          showNotification: true,
+          hasUnreadNotifications:
+              ref.watch(unreadNotificationsCountProvider) > 0,
+          onNotificationTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const VendorNotificationsPage(),
+              ),
+            );
+          },
+        ),
         Expanded(
           child: vendorAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -126,8 +143,8 @@ class _LoadedProfile extends ConsumerWidget {
               onChanged: (open) async {
                 try {
                   await ref
-                      .read(vendorAuthRepositoryProvider)
-                      .toggleAvailability(open);
+                      .read(vendorProfileRepositoryProvider)
+                      .setOpen(open);
                   ref.invalidate(currentVendorProvider);
                 } catch (e) {
                   if (context.mounted) {
@@ -137,6 +154,35 @@ class _LoadedProfile extends ConsumerWidget {
                   }
                 }
               },
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        const _SectionTitle('Carte'),
+        _SettingsCard(
+          children: [
+            _NavRow(
+              icon: Icons.restaurant_menu_rounded,
+              title: 'Gérer mon menu',
+              sub: 'Plats, prix, disponibilité',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const VendorMenuPage()),
+                );
+              },
+            ),
+            _NavRow(
+              icon: Icons.schedule_rounded,
+              title: 'Horaires d’ouverture',
+              sub: 'Jours et plages affichés aux étudiants',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const VendorSchedulesPage(),
+                  ),
+                );
+              },
+              isLast: true,
             ),
           ],
         ),
@@ -167,13 +213,13 @@ class _LoadedProfile extends ConsumerWidget {
             _NavRow(
               icon: Icons.shield_rounded,
               title: 'Modifier mon code PIN',
-              sub: 'Dernière modification il y a 12 jours',
+              sub: 'Mot de passe temporaire, puis nouveau code',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Fonctionnalité disponible à la prochaine version.',
-                    ),
+                ref.read(vendorAuthControllerProvider.notifier).startPinChange();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const VendorActivationPage(popOnSuccess: true),
                   ),
                 );
               },
@@ -181,11 +227,11 @@ class _LoadedProfile extends ConsumerWidget {
             _NavRow(
               icon: Icons.notifications_rounded,
               title: 'Notifications',
-              sub: 'Nouvelles commandes, créance',
+              sub: 'Nouvelles commandes, créance, retraits',
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Réglages de notifications à venir.'),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const VendorNotificationsPage(),
                   ),
                 );
               },
@@ -208,8 +254,8 @@ class _LoadedProfile extends ConsumerWidget {
                   builder: (_) => _LogoutDialog(),
                 );
                 if (ok == true) {
-                  await ref.read(vendorAuthProvider.notifier).logout();
-                  if (context.mounted) context.go('/login');
+                  await ref.read(vendorAuthControllerProvider.notifier).logout();
+                  if (context.mounted) context.go('/pin');
                 }
               },
               isLast: true,

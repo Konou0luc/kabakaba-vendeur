@@ -1,137 +1,150 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../core/theme/app_colors.dart';
+
+/// Palette du pavé, selon le fond de l'écran qui l'accueille.
+enum NumericKeypadTone {
+  /// Écrans d'activation, sur le fond sombre.
+  dark(
+    keyBackground: Color(0x0DFFFFFF),
+    keyBorder: Color(0x1FFFFFFF),
+    digit: Colors.white,
+    action: Color(0xFF94A3B8),
+  ),
+
+  /// Reste de l'application, sur fond clair.
+  light(
+    keyBackground: Color(0xFFF1F3F8),
+    keyBorder: AppColors.borderLight,
+    digit: Color(0xFF0D1438),
+    action: Color(0xFF96A0BC),
+  );
+
+  final Color keyBackground;
+  final Color keyBorder;
+  final Color digit;
+  final Color action;
+
+  const NumericKeypadTone({
+    required this.keyBackground,
+    required this.keyBorder,
+    required this.digit,
+    required this.action,
+  });
+}
+
+/// Pavé numérique de saisie du code PIN.
+///
+/// Un pavé dédié plutôt qu'un clavier système : la saisie reste possible sans
+/// masquer la moitié de l'écran, et les touches sont assez grandes pour être
+/// utilisées d'une main pendant le service.
 class NumericKeypad extends StatelessWidget {
-  final void Function(String) onKeyPressed;
+  final ValueChanged<String> onDigit;
   final VoidCallback onDelete;
-  final bool showDelete;
-  final bool isLight;
-  final Color? keyColor;
-  final Color? keyBgColor;
-  final Color? keyBorderColor;
+  final NumericKeypadTone tone;
+
+  /// Désactivé pendant un appel réseau, pour éviter une double validation.
+  final bool enabled;
 
   const NumericKeypad({
     super.key,
-    required this.onKeyPressed,
+    required this.onDigit,
     required this.onDelete,
-    this.showDelete = true,
-    this.isLight = false,
-    this.keyColor,
-    this.keyBgColor,
-    this.keyBorderColor,
+    this.tone = NumericKeypadTone.light,
+    this.enabled = true,
+  });
+
+  static const _rows = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['', '0', 'del'],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final row in _rows)
+          Expanded(
+            child: Row(
+              children: [
+                for (final key in row)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      child: key.isEmpty
+                          ? const SizedBox.shrink()
+                          : AspectRatio(
+                              aspectRatio: 1,
+                              child: _Key(
+                                label: key,
+                                tone: tone,
+                                enabled: enabled,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  key == 'del' ? onDelete() : onDigit(key);
+                                },
+                              ),
+                            ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _Key extends StatelessWidget {
+  final String label;
+  final NumericKeypadTone tone;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _Key({
+    required this.label,
+    required this.tone,
+    required this.enabled,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDelete = label == 'del';
 
-    final backgroundColor = isLight
-        ? const Color(0xFFF1F3F8)
-        : (isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : const Color(0xFFF1F3F8));
-    final textColor = isLight ? const Color(0xFF0D1438) : Colors.white;
-    final borderColor = isLight
-        ? const Color(0xFFE4E9F4)
-        : (isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : const Color(0xFFE4E9F4));
-
-    Widget buildKey(
-      String label, {
-      bool isAction = false,
-      bool isEmpty = false,
-      Widget? child,
-    }) {
-      return GestureDetector(
-        onTap: isAction ? onDelete : () => onKeyPressed(label),
-        child: Container(
-          height: isLight ? 52 : 54,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(isLight ? 15 : 16),
-            color: isEmpty
-                ? Colors.transparent
-                : (keyBgColor ?? backgroundColor),
-            border: isEmpty
-                ? null
-                : Border.all(
-                    color: keyBorderColor ?? borderColor,
-                    width: isAction ? 1 : 1,
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: Material(
+        color: tone.keyBackground,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: tone.keyBorder),
+            ),
+            alignment: Alignment.center,
+            child: isDelete
+                ? Icon(Icons.backspace_rounded, size: 20, color: tone.action)
+                : Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: tone.digit,
+                    ),
                   ),
           ),
-          child:
-              child ??
-              Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: isLight ? 19 : 20,
-                    fontWeight: isAction ? FontWeight.w600 : FontWeight.w600,
-                    color: isAction
-                        ? (keyColor ??
-                              (isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF96A0BC)))
-                        : (keyColor ?? textColor),
-                  ),
-                ),
-              ),
         ),
-      );
-    }
-
-    final keys = [
-      ['1', '2', '3'],
-      ['4', '5', '6'],
-      ['7', '8', '9'],
-      ['', '0', showDelete ? 'del' : ''],
-    ];
-
-    return Column(
-      children: keys.map((row) {
-        return Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: row.map((key) {
-              if (key.isEmpty) {
-                return const Spacer();
-              }
-              final isAction = key == 'del';
-              final isEmpty = key == '';
-              return Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    child: AspectRatio(
-                      aspectRatio: isLight ? 1 : 1,
-                      child: buildKey(
-                        key,
-                        isAction: isAction,
-                        isEmpty: isEmpty,
-                        child: isEmpty
-                            ? null
-                            : isAction
-                            ? Icon(
-                                Icons.backspace_rounded,
-                                size: 20,
-                                color:
-                                    keyColor ??
-                                    (isLight
-                                        ? const Color(0xFF96A0BC)
-                                        : const Color(0xFF94A3B8)),
-                              )
-                            : null,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        );
-      }).toList(),
+      ),
     );
   }
 }

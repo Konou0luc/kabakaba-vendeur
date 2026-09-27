@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/network/paginated.dart';
 import '../../../../shared/models/transaction_model.dart';
 import '../../../../shared/models/vendor_model.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/vendor_header.dart';
-import '../../../auth/data/vendor_auth_provider.dart';
-import '../../data/vendor_wallet_provider.dart';
+import '../../../notifications/data/notifications_repository.dart';
+import '../../../notifications/presentation/pages/vendor_notifications_page.dart';
+import '../../../wallet/data/transactions_repository.dart';
+import '../../../withdrawals/presentation/pages/vendor_withdrawal_history_page.dart';
+import '../../data/vendor_profile_repository.dart';
 import 'vendor_withdraw_amount_page.dart';
 import 'vendor_transaction_history_page.dart';
 
@@ -18,11 +22,23 @@ class VendorWalletPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vendorAsync = ref.watch(currentVendorProvider);
-    final txAsync = ref.watch(vendorTransactionsProvider);
+    final txAsync = ref.watch(recentTransactionsProvider);
 
     return Column(
       children: [
-        VendorHeader(vendor: vendorAsync.value),
+        VendorHeader(
+          vendor: vendorAsync.value,
+          showNotification: true,
+          hasUnreadNotifications:
+              ref.watch(unreadNotificationsCountProvider) > 0,
+          onNotificationTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const VendorNotificationsPage(),
+              ),
+            );
+          },
+        ),
         vendorAsync.when(
           loading: () => _WalletSkeleton(),
           error: (_, __) => _ErrorView(
@@ -34,7 +50,7 @@ class VendorWalletPage extends ConsumerWidget {
             txAsync: txAsync,
             onWithdraw: vendor.isActive
                 ? () {
-                    if (vendor.debtFcfa > 0) {
+                    if (vendor.withdrawalBlocked) {
                       _showDebtBlockedDialog(context);
                     } else {
                       Navigator.of(context).push(
@@ -46,16 +62,58 @@ class VendorWalletPage extends ConsumerWidget {
                     }
                   }
                 : null,
-            onHistory: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const VendorTransactionHistoryPage(),
-                ),
-              );
-            },
+            onHistory: () => _openHistoryPicker(context),
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _openHistoryPicker(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.swap_vert_rounded),
+                  title: const Text('Transactions'),
+                  subtitle: const Text('Crédits, débits et commandes'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const VendorTransactionHistoryPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.payments_rounded),
+                  title: const Text('Retraits'),
+                  subtitle: const Text('Flooz, Mixx et réclamations'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const VendorWithdrawalHistoryPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -130,7 +188,7 @@ class VendorWalletPage extends ConsumerWidget {
 
 class _LoadedWallet extends StatelessWidget {
   final VendorModel vendor;
-  final AsyncValue<List<TransactionModel>> txAsync;
+  final AsyncValue<Paginated<TransactionModel>> txAsync;
   final VoidCallback? onWithdraw;
   final VoidCallback onHistory;
   const _LoadedWallet({
@@ -151,7 +209,7 @@ class _LoadedWallet extends StatelessWidget {
             onWithdraw: onWithdraw,
             onHistory: onHistory,
           ),
-          if (vendor.debtFcfa > 0) ...[
+          if (vendor.withdrawalBlocked) ...[
             const SizedBox(height: 12),
             _DebtBanner(debtFcfa: vendor.debtFcfa),
           ],
@@ -170,8 +228,8 @@ class _LoadedWallet extends StatelessWidget {
                 style: AppTextStyles.emptySub,
               ),
             ),
-            data: (list) {
-              if (list.isEmpty) {
+            data: (page) {
+              if (page.items.isEmpty) {
                 return _EmptyTxCard();
               }
               return Container(
@@ -188,7 +246,7 @@ class _LoadedWallet extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Column(
-                  children: list.take(8).map((t) {
+                  children: page.items.take(8).map((t) {
                     return _TxRow(transaction: t);
                   }).toList(),
                 ),
@@ -212,7 +270,7 @@ class _WalletCard extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final blocked = vendor.debtFcfa > 0;
+    final blocked = vendor.withdrawalBlocked;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),

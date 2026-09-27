@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/vendor_model.dart';
 import '../../../../shared/widgets/hint_box.dart';
 import '../../../../shared/widgets/kaba_button.dart';
 import '../../../../shared/widgets/light_app_bar.dart';
+import '../../../withdrawals/domain/withdrawal_models.dart';
 import 'vendor_withdraw_confirm_page.dart';
-
-enum _Operator { moov, tmoney }
 
 class VendorWithdrawMethodPage extends ConsumerStatefulWidget {
   final VendorModel vendor;
   final int amount;
+
   const VendorWithdrawMethodPage({
     super.key,
     required this.vendor,
@@ -26,10 +27,12 @@ class VendorWithdrawMethodPage extends ConsumerStatefulWidget {
 
 class _VendorWithdrawMethodPageState
     extends ConsumerState<VendorWithdrawMethodPage> {
-  _Operator _selected = _Operator.moov;
+  WithdrawalOperator _selected = WithdrawalOperator.flooz;
 
   @override
   Widget build(BuildContext context) {
+    final phone = widget.vendor.phone ?? 'Numéro non renseigné';
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Column(
@@ -45,27 +48,28 @@ class _VendorWithdrawMethodPageState
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
-                    '${widget.amount.toString()} FCFA vers',
+                    '${widget.amount} FCFA vers',
                     style: AppTextStyles.sectionLabel,
                   ),
                 ),
                 _MethodRow(
                   logo: 'Moov',
                   logoColor: const Color(0xFF0057B8),
-                  name: 'Moov Flooz',
-                  sub: widget.vendor.phone ?? '+228 90 12 34 56',
-                  selected: _selected == _Operator.moov,
-                  onTap: () => setState(() => _selected = _Operator.moov),
+                  name: WithdrawalOperator.flooz.label,
+                  sub: phone,
+                  selected: _selected == WithdrawalOperator.flooz,
+                  onTap: () =>
+                      setState(() => _selected = WithdrawalOperator.flooz),
                 ),
                 _MethodRow(
                   logo: 'T-M',
                   logoColor: const Color(0xFFFCC93B),
                   logoTextColor: AppColors.textPrimaryLight,
-                  name: 'Mixx by Yas (T-Money)',
-                  sub: widget.vendor.phone ?? '+228 90 12 34 56',
-                  selected: _selected == _Operator.tmoney,
+                  name: WithdrawalOperator.mixx.label,
+                  sub: phone,
+                  selected: _selected == WithdrawalOperator.mixx,
                   onTap: () =>
-                      setState(() => _selected = _Operator.tmoney),
+                      setState(() => _selected = WithdrawalOperator.mixx),
                 ),
                 const SizedBox(height: 8),
                 const HintBox(
@@ -77,18 +81,21 @@ class _VendorWithdrawMethodPageState
                 const SizedBox(height: 24),
                 KabaButton(
                   text: 'Continuer',
-                  icon: const Icon(Icons.arrow_forward_rounded,
-                      color: Colors.white, size: 16),
+                  icon: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => VendorWithdrawConfirmPage(
-                        vendor: widget.vendor,
-                        amount: widget.amount,
-                        operator: _selected == _Operator.moov
-                            ? 'Moov Flooz'
-                            : 'T-Money',
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => VendorWithdrawConfirmPage(
+                          vendor: widget.vendor,
+                          amount: widget.amount,
+                          operator: _selected,
+                        ),
                       ),
-                    ));
+                    );
                   },
                 ),
               ],
@@ -108,6 +115,7 @@ class _MethodRow extends StatelessWidget {
   final String sub;
   final bool selected;
   final VoidCallback onTap;
+
   const _MethodRow({
     required this.logo,
     required this.logoColor,
@@ -117,6 +125,7 @@ class _MethodRow extends StatelessWidget {
     required this.onTap,
     this.logoTextColor,
   });
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -128,15 +137,15 @@ class _MethodRow extends StatelessWidget {
           color: selected ? AppColors.indigoLight : Colors.white,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-              color: selected
-                  ? AppColors.primary
-                  : AppColors.borderLight,
-              width: 1.5),
+            color: selected ? AppColors.primary : AppColors.borderLight,
+            width: 1.5,
+          ),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x141B2A6B),
-                blurRadius: 18,
-                offset: Offset(0, 4))
+              color: Color(0x141B2A6B),
+              blurRadius: 18,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
         child: Row(
@@ -176,10 +185,9 @@ class _MethodRow extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: selected
-                        ? AppColors.primary
-                        : AppColors.borderLight,
-                    width: 2),
+                  color: selected ? AppColors.primary : AppColors.borderLight,
+                  width: 2,
+                ),
               ),
               child: Center(
                 child: AnimatedContainer(
@@ -188,9 +196,7 @@ class _MethodRow extends StatelessWidget {
                   height: 9,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: selected
-                        ? AppColors.primary
-                        : Colors.transparent,
+                    color: selected ? AppColors.primary : Colors.transparent,
                   ),
                 ),
               ),

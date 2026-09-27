@@ -1,254 +1,200 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+
 import '../config/app_config.dart';
+import '../storage/session_store.dart';
 import 'api_endpoints.dart';
-import 'session_state.dart';
-import 'token_storage.dart';
+import 'vendor_http_client.dart';
 
-enum _RefreshResult { success, rejected, unavailable }
+/// Résultat d'une tentative de renouvellement de session.
+enum _RefreshOutcome {
+  /// Nouveaux jetons obtenus : la requête d'origine peut être rejouée.
+  renewed,
 
+  /// Le serveur a refusé le refresh token : la session est morte.
+  rejected,
+
+  /// Échec temporaire (réseau, 5xx) : la session n'est pas invalidée, on
+  /// laisse simplement remonter l'erreur d'origine.
+  unavailable,
+}
+
+/// Client HTTP de l'application.
+///
+/// Ne réexpose pas les verbes de Dio : un wrapper qui se contente de
+/// transmettre ses arguments n'apporte rien et double la surface à maintenir.
+/// La valeur est ici dans les intercepteurs (jeton, renouvellement,
+/// journalisation) ; les dépôts utilisent `dio` directement.
 class ApiClient {
-  final Dio _dio;
-  final TokenStorage _tokenStorage;
+  final Dio dio;
+  final SessionStore _sessionStore;
 
-  final VoidCallback? onSessionExpired;
+  /// Dio séparé, sans intercepteur, pour le renouvellement : sinon un 401 sur
+  /// `/auth/refresh` relancerait un renouvellement, à l'infini.
+  final Dio _refreshDio;
 
-  ApiClient(this._dio, this._tokenStorage, {this.onSessionExpired}) {
-    _setupDio();
+  /// Appelé une seule fois quand la session est définitivement perdue.
+  final FutureOr<void> Function() onSessionExpired;
+
+  /// Un seul renouvellement à la fois : quand cinq requêtes parallèles
+  /// prennent un 401 ensemble, elles doivent partager la même tentative.
+  /// Sans ça, la rotation des refresh tokens côté serveur considère les
+  /// tentatives concurrentes comme un rejeu de jeton volé et révoque toute la
+  /// famille — déconnectant le vendeur en pleine utilisation.
+  Future<_RefreshOutcome>? _inFlightRefresh;
+
+  ApiClient({
+    required SessionStore sessionStore,
+    required this.onSessionExpired,
+    Dio? dio,
+    Dio? refreshDio,
+  }) : _sessionStore = sessionStore,
+       dio = dio ?? Dio(),
+       _refreshDio = refreshDio ?? Dio() {
+    _configure(this.dio, attachAdapter: dio == null);
+    _configure(_refreshDio, attachAdapter: refreshDio == null);
+    _installInterceptors();
   }
 
-  Dio get dio => _dio;
+  void _configure(Dio target, {required bool attachAdapter}) {
+    if (attachAdapter) attachVendorHttpAdapter(target);
+    target.options
+      ..baseUrl = AppConfig.apiBaseUrl
+      ..connectTimeout = const Duration(seconds: 20)
+      ..receiveTimeout = const Duration(seconds: 30)
+      ..sendTimeout = const Duration(seconds: 30)
+      ..headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+  }
 
-  static String errorMessage(Object error) {
-    if (error is DioException) {
-      final data = error.response?.data;
-      if (data is Map<String, dynamic>) {
-        final message = data['message'];
-        if (message is String && message.isNotEmpty) return message;
-        if (message is List && message.isNotEmpty) {
-          return message.join('\n');
-        }
-      }
-      if (error.type == DioExceptionType.connectionError) {
-        return 'Impossible de joindre le serveur. Vérifie ta connexion.';
-      }
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return 'Le serveur met trop de temps à répondre. Réessaie.';
+  void _installInterceptors() {
+    dio.interceptors.add(
+      InterceptorsWrapper(onRequest: _onRequest, onError: _onError),
+    );
+
+    if (AppConfig.enableNetworkLogs) {
+      // Jamais en release : ces traces contiennent l'en-tête Authorization
+      // et les corps de réponse complets.
+      dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          // Les corps d'auth portent mot de passe, OTP et PIN.
+          requestBody: false,
+          responseBody: true,
+          compact: true,
+          maxWidth: 100,
+        ),
+      );
+    }
+  }
+
+  void _onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (!_isPublicAuthPath(options.path)) {
+      final accessToken = _sessionStore.snapshot.accessToken;
+      if (accessToken != null) {
+        options.headers['Authorization'] = 'Bearer $accessToken';
       }
     }
-    return 'Une erreur est survenue. Réessaie.';
+    handler.next(options);
   }
 
-  void _setupDio() {
-    _dio.options.baseUrl = AppConfig.apiUrl;
-    _dio.options.connectTimeout = const Duration(seconds: 30);
-    _dio.options.receiveTimeout = const Duration(seconds: 30);
-    _dio.options.sendTimeout = const Duration(seconds: 30);
-    _dio.options.headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+  Future<void> _onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    final request = error.requestOptions;
 
-    _dio.interceptors.addAll([
-      QueuedInterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final accessToken = _tokenStorage.getAccessToken();
-          if (accessToken != null) {
-            options.headers['Authorization'] = 'Bearer $accessToken';
-          }
-          return handler.next(options);
-        },
-        onError: (error, handler) async {
-          final requestPath = error.requestOptions.path;
-          final isPublicAuthRequest = [
-            ApiEndpoints.authSendOtp,
-            ApiEndpoints.authVerifyOtp,
-            ApiEndpoints.authLoginEmail,
-          ].any(requestPath.endsWith);
-          if (error.response?.statusCode == 401 && !isPublicAuthRequest) {
-            final alreadyRetried =
-                error.requestOptions.extra['didRefreshAccessToken'] == true;
-            final refreshResult = alreadyRetried
-                ? _RefreshResult.rejected
-                : await _refreshToken();
-            if (refreshResult == _RefreshResult.success) {
-              final requestOptions = error.requestOptions;
-              requestOptions.extra['didRefreshAccessToken'] = true;
-              final accessToken = _tokenStorage.getAccessToken();
-              requestOptions.headers['Authorization'] = 'Bearer $accessToken';
-              try {
-                final response = await _dio.fetch(requestOptions);
-                return handler.resolve(response);
-              } on DioException catch (e) {
-                return handler.next(e);
-              }
-            } else {
-              if (refreshResult == _RefreshResult.rejected) {
-                await _clearAuthAndRedirect();
-              }
-              return handler.next(error);
-            }
-          }
-          return handler.next(error);
-        },
-      ),
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-        maxWidth: 90,
-      ),
-    ]);
+    final shouldAttemptRefresh =
+        error.response?.statusCode == 401 &&
+        !_isPublicAuthPath(request.path) &&
+        request.extra[_retriedFlag] != true;
+
+    if (!shouldAttemptRefresh) return handler.next(error);
+
+    final outcome = await _refreshSession();
+
+    switch (outcome) {
+      case _RefreshOutcome.renewed:
+        try {
+          handler.resolve(await _replay(request));
+        } on DioException catch (replayError) {
+          handler.next(replayError);
+        }
+      case _RefreshOutcome.rejected:
+        await _sessionStore.clearTokens();
+        await onSessionExpired();
+        handler.next(error);
+      case _RefreshOutcome.unavailable:
+        handler.next(error);
+    }
   }
 
-  Future<_RefreshResult> _refreshToken() async {
-    final refreshToken = _tokenStorage.getRefreshToken();
-    if (refreshToken == null) return _RefreshResult.rejected;
+  Future<Response<dynamic>> _replay(RequestOptions request) {
+    final accessToken = _sessionStore.snapshot.accessToken;
+    return dio.fetch(
+      request
+        ..extra[_retriedFlag] = true
+        ..headers['Authorization'] = 'Bearer $accessToken',
+    );
+  }
+
+  Future<_RefreshOutcome> _refreshSession() {
+    return _inFlightRefresh ??= _performRefresh().whenComplete(() {
+      _inFlightRefresh = null;
+    });
+  }
+
+  Future<_RefreshOutcome> _performRefresh() async {
+    final refreshToken = _sessionStore.snapshot.refreshToken;
+    if (refreshToken == null) return _RefreshOutcome.rejected;
 
     try {
-      final refreshDio = Dio(BaseOptions(baseUrl: AppConfig.apiUrl));
-      final response = await refreshDio.post(
+      final response = await _refreshDio.post<Map<String, dynamic>>(
         ApiEndpoints.authRefresh,
         data: {'refreshToken': refreshToken},
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final newAccessToken = data['accessToken'] as String?;
-        final newRefreshToken = data['refreshToken'] as String?;
-        final userId = _tokenStorage.getUserId() ?? '';
+      final accessToken = response.data?['accessToken'] as String?;
+      final renewedRefreshToken = response.data?['refreshToken'] as String?;
+      if (accessToken == null || renewedRefreshToken == null) {
+        return _RefreshOutcome.rejected;
+      }
 
-        if (newAccessToken != null && newRefreshToken != null) {
-          await _tokenStorage.saveTokens(
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-            userId: userId,
-          );
-          return _RefreshResult.success;
-        }
-      }
-      return _RefreshResult.rejected;
+      await _sessionStore.saveTokens(
+        accessToken: accessToken,
+        refreshToken: renewedRefreshToken,
+      );
+      return _RefreshOutcome.renewed;
     } on DioException catch (error) {
-      if (error.response?.statusCode == 401 ||
-          error.response?.statusCode == 403) {
-        return _RefreshResult.rejected;
-      }
-      return _RefreshResult.unavailable;
-    } catch (_) {
-      return _RefreshResult.unavailable;
+      final status = error.response?.statusCode;
+      // 401/403 : le serveur a tranché, la session est perdue. Tout le reste
+      // (coupure réseau, 502 de Vercel au réveil…) est passager et ne doit
+      // pas déconnecter le vendeur.
+      return status == 401 || status == 403
+          ? _RefreshOutcome.rejected
+          : _RefreshOutcome.unavailable;
     }
   }
 
-  Future<void> _clearAuthAndRedirect() async {
-    await _tokenStorage.clearTokens();
-    onSessionExpired?.call();
-  }
+  static const _retriedFlag = 'kabakaba.didRetryAfterRefresh';
 
-  Future<Response<T>> get<T>(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onReceiveProgress,
-  }) {
-    return _dio.get<T>(
-      path,
-      queryParameters: queryParameters,
-      options: options,
-      cancelToken: cancelToken,
-      onReceiveProgress: onReceiveProgress,
-    );
-  }
-
-  Future<Response<T>> post<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) {
-    return _dio.post<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-      cancelToken: cancelToken,
-      onSendProgress: onSendProgress,
-      onReceiveProgress: onReceiveProgress,
-    );
-  }
-
-  Future<Response<T>> put<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) {
-    return _dio.put<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-      cancelToken: cancelToken,
-      onSendProgress: onSendProgress,
-      onReceiveProgress: onReceiveProgress,
-    );
-  }
-
-  Future<Response<T>> patch<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) {
-    return _dio.patch<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-      cancelToken: cancelToken,
-      onSendProgress: onSendProgress,
-      onReceiveProgress: onReceiveProgress,
-    );
-  }
-
-  Future<Response<T>> delete<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) {
-    return _dio.delete<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-      cancelToken: cancelToken,
-    );
-  }
+  static bool _isPublicAuthPath(String path) =>
+      ApiEndpoints.publicAuthPaths.any(path.endsWith);
 }
 
+/// Passe à `true` quand l'API a rejeté à la fois le jeton d'accès et son
+/// jeton de renouvellement. Le routeur écoute cet état pour renvoyer vers
+/// l'écran de connexion.
+final sessionExpiredProvider = StateProvider<bool>((ref) => false);
+
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final dio = Dio();
-  final tokenStorage = ref.watch(tokenStorageProvider);
   return ApiClient(
-    dio,
-    tokenStorage,
+    sessionStore: ref.watch(sessionStoreProvider),
     onSessionExpired: () {
       ref.read(sessionExpiredProvider.notifier).state = true;
     },
