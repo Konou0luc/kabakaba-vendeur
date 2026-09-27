@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kabakaba — App vendeur (connexion + dashboard)</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --indigo:#1B2A6B;
+  --indigo-dark:#0D1438;
+  --card-dark:#111A45;
+  --orange:#F07840;
+  --line:rgba(255,255,255,.12);
+  --field:rgba(255,255,255,.05);
+  --field-focus:rgba(255,255,255,.09);
+  --text:#FFFFFF;
+  --muted:rgba(255,255,255,.5);
+  --muted-soft:rgba(255,255,255,.38);
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#E4E8F1;
+  font-family:var(--font);
+  padding:48px 24px 90px;
+  -webkit-font-smoothing:antialiased;
+}
+.page-title{font-size:23px;font-weight:800;color:var(--indigo-dark);margin-bottom:6px;letter-spacing:-.01em}
+.page-sub{font-size:14.8px;color:#5C6584;margin-bottom:40px;max-width:640px;line-height:1.6}
+
+.flow-title{font-size:16.3px;font-weight:800;color:var(--indigo);margin-bottom:6px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.flow-title .n{width:22px;height:22px;border-radius:9px;background:var(--indigo);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-sub{font-size:14.8px;color:#5C6584;margin-bottom:28px;max-width:600px;line-height:1.6}
+.flow-block{margin-bottom:56px}
+
+.flow-row{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:30px}
+.flow-step{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.flow-arrow{display:flex;align-items:center;justify-content:center;width:34px;color:#A8B3CC;flex-shrink:0;margin-top:290px}
+.frame-label{
+  font-size:13px;font-weight:700;color:var(--indigo);margin-bottom:12px;
+  letter-spacing:.04em;text-transform:uppercase;text-align:center;
+}
+.frame-label span{display:block;font-size:12px;font-weight:600;color:#96A0BC;text-transform:none;letter-spacing:0;margin-top:2px}
+
+/* ===== Phone frame ===== */
+.phone{
+  width:300px;height:614px;
+  background:var(--indigo-dark);
+  border-radius:38px;
+  padding:10px;
+  box-shadow:0 24px 50px -10px rgba(13,20,56,.35), 0 0 0 1px rgba(13,20,56,.06);
+}
+.screen{
+  background:var(--indigo-dark);
+  width:100%;height:100%;
+  border-radius:30px;
+  overflow:hidden;
+  position:relative;
+  display:flex;flex-direction:column;
+}
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:30px;z-index:5;
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;
+  font-size:13.3px;font-weight:700;color:#fff;
+}
+.statusbar .icons{display:flex;align-items:center;gap:5px;opacity:.95}
+
+/* ---- Hero header (gradient) ---- */
+.hero{
+  background:linear-gradient(155deg,var(--indigo) 0%,var(--indigo-dark) 100%);
+  padding:34px 24px 40px;position:relative;overflow:hidden;flex-shrink:0;
+}
+.hero::before{
+  content:'';position:absolute;top:-60px;right:-50px;width:170px;height:170px;
+  border-radius:50%;background:rgba(240,120,64,.16);
+}
+.hero::after{
+  content:'';position:absolute;bottom:-70px;left:-40px;width:140px;height:140px;
+  border-radius:50%;background:rgba(255,255,255,.04);
+}
+.hero-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;margin-bottom:20px}
+.back-circle{
+  width:32px;height:32px;border-radius:12px;background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+.back-circle.ghost{visibility:hidden}
+.progress-pill{
+  font-size:13px;font-weight:700;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.12);padding:5px 11px;border-radius:22px;letter-spacing:.02em;
+}
+.hero-icon{
+  width:52px;height:52px;border-radius:17px;background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;color:var(--orange);
+  margin-bottom:14px;position:relative;z-index:2;
+  border:1px solid rgba(255,255,255,.14);
+}
+.hero h1{
+  font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em;position:relative;z-index:2;margin-bottom:6px;
+}
+.hero p{
+  font-size:14.3px;color:rgba(255,255,255,.62);line-height:1.5;position:relative;z-index:2;max-width:230px;
+}
+.hero p b{color:#fff;font-weight:700}
+.progress-track{
+  position:relative;z-index:2;height:4px;background:rgba(255,255,255,.16);border-radius:5px;margin-top:16px;overflow:hidden;
+}
+.progress-fill{height:100%;background:var(--orange);border-radius:5px}
+
+/* ---- Card body ---- */
+.card{
+  background:var(--card-dark);flex:1;padding:26px 22px 22px;
+  display:flex;flex-direction:column;margin-top:-20px;border-radius:24px 24px 0 0;position:relative;z-index:3;
+  border-top:1px solid var(--line);
+}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em}
+.input-shell{
+  height:48px;border:1.5px solid var(--line);border-radius:14px;
+  display:flex;align-items:center;padding:0 14px;gap:10px;background:var(--field);
+}
+.input-shell.focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(240,120,64,.16);background:var(--field-focus)}
+.input-shell .ic{color:var(--muted);flex-shrink:0;display:flex}
+.input-shell input,.input-shell .val{
+  border:none;outline:none;background:transparent;font-family:inherit;font-size:15.3px;color:var(--text);
+  width:100%;font-weight:500;
+}
+.input-shell .val.placeholder{color:var(--muted-soft);font-weight:400}
+.input-shell .prefix{font-weight:700;color:var(--text);padding-right:9px;border-right:1px solid var(--line);flex-shrink:0}
+.input-shell .eye{color:var(--muted);cursor:pointer;flex-shrink:0;display:flex}
+
+.otp-row{display:flex;gap:9px;justify-content:center;margin:10px 0 16px}
+.otp-box{
+  width:40px;height:48px;border:1.5px solid var(--line);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:var(--text);background:var(--field);
+}
+.otp-box.filled{border-color:rgba(240,120,64,.5);background:rgba(240,120,64,.12);color:#fff}
+.otp-box.cursor{border-color:var(--orange);border-width:2px;box-shadow:0 0 0 3px rgba(240,120,64,.18)}
+.timer{text-align:center;font-size:14.3px;color:var(--muted);margin-bottom:6px}
+.timer span{color:var(--orange);font-weight:700}
+.resend{text-align:center;font-size:13.8px;color:#fff;font-weight:600;margin-bottom:18px}
+
+.hint-box{
+  background:rgba(240,120,64,.10);border:1px solid rgba(240,120,64,.28);border-radius:14px;padding:12px 14px;
+  font-size:13.3px;color:rgba(255,255,255,.75);
+  display:flex;gap:9px;margin-bottom:6px;line-height:1.55;align-items:flex-start;font-weight:500;
+}
+.hint-box .ic{flex-shrink:0;margin-top:1px;color:var(--orange);display:flex}
+
+.spacer{flex:1}
+.btn-primary{
+  height:56px;border-radius:15px;background:var(--orange);color:#fff;border:none;
+  font-family:inherit;font-size:15.8px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;gap:8px;cursor:pointer;
+  box-shadow:0 8px 20px -4px rgba(240,120,64,.45);
+}
+.btn-primary.disabled{background:var(--field);color:var(--muted-soft);box-shadow:none}
+.foot-note{text-align:center;font-size:13.3px;color:var(--muted-soft);font-weight:500;margin-top:14px;line-height:1.5}
+.foot-note b{color:var(--muted)}
+
+/* ---- Success screen ---- */
+.success-hero{
+  background:linear-gradient(155deg,var(--indigo) 0%,var(--indigo-dark) 100%);
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;padding:30px;text-align:center;
+}
+.success-hero::before{
+  content:'';position:absolute;top:-50px;left:-40px;width:180px;height:180px;
+  border-radius:50%;background:rgba(240,120,64,.14);
+}
+.success-hero::after{
+  content:'';position:absolute;bottom:-60px;right:-30px;width:150px;height:150px;
+  border-radius:50%;background:rgba(255,255,255,.04);
+}
+.success-check{
+  width:70px;height:70px;border-radius:22px;background:var(--orange);color:#fff;
+  display:flex;align-items:center;justify-content:center;margin-bottom:22px;position:relative;z-index:2;
+  box-shadow:0 14px 30px -8px rgba(240,120,64,.55);
+}
+.success-hero h2{font-size:21px;font-weight:800;color:#fff;margin-bottom:10px;position:relative;z-index:2;letter-spacing:-.01em}
+.success-hero p{font-size:14.3px;color:rgba(255,255,255,.62);line-height:1.6;max-width:220px;position:relative;z-index:2;margin-bottom:30px}
+.success-hero .btn-primary{width:100%;position:relative;z-index:2}
+
+/* ---- PIN dots ---- */
+.pin-dots{display:flex;gap:18px;justify-content:center;margin:22px 0 10px}
+.pin-dot{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--line);background:transparent;transition:all .15s}
+.pin-dot.filled{background:var(--orange);border-color:var(--orange)}
+.pin-dot.active{border-color:var(--orange);box-shadow:0 0 0 4px rgba(240,120,64,.18)}
+.pin-caption{text-align:center;font-size:13.8px;color:var(--muted);margin-bottom:8px}
+
+/* ---- Keypad ---- */
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:auto}
+.key{
+  height:54px;border-radius:16px;background:var(--field);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;
+}
+.key.key-empty{background:transparent;border:none}
+.key.key-action{background:transparent;border:none;color:var(--muted);display:flex}
+
+/* ---- Welcome-back screen ---- */
+.welcome-top{padding:52px 24px 8px;text-align:center;flex-shrink:0}
+.avatar-circle{
+  width:60px;height:60px;border-radius:20px;
+  background:linear-gradient(155deg,var(--orange),#D9642C);
+  display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;color:#fff;
+  margin:0 auto 16px;box-shadow:0 12px 26px -8px rgba(240,120,64,.55);
+}
+.welcome-greet{font-size:14.3px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.welcome-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.01em;margin-bottom:10px}
+.welcome-sub{font-size:13.8px;color:var(--muted-soft);margin-bottom:6px}
+.welcome-body{flex:1;display:flex;flex-direction:column;padding:10px 26px 26px}
+.forgot-link{text-align:center;font-size:13.8px;color:var(--orange);font-weight:700;margin-top:16px}
+
+/* ---- Next-step placeholder ---- */
+.next-ghost{
+  width:300px;height:614px;border-radius:38px;border:2px dashed #C4CBE0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  color:#8C97B8;text-align:center;padding:30px;
+}
+.next-ghost svg{opacity:.6}
+.next-ghost .t{font-size:14.8px;font-weight:700;color:#5C6584}
+.next-ghost .s{font-size:13.3px;color:#96A0BC;line-height:1.5;max-width:180px}
+
+/* ============================================================
+   DASHBOARD VENDEUR — styles ajoutés à la suite (thème clair)
+   ============================================================ */
+
+:root{
+  --indigo:#1B2A6B; --indigo-dark:#0D1438; --indigo-light:#EEF1FA;
+  --orange:#F07840; --orange-light:#FEF0E9;
+  --white:#FFFFFF; --bg:#F7F8FC;
+  --ltext:#0D1438; --ltext-2:#3D4A6B; --lmuted:#5C6584; --border:#E4E9F4;
+  --green:#16A34A; --green-light:#F0FDF4;
+  --red:#DC2626; --red-light:#FEF2F2;
+  --gray-light:#F1F3F8;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E4E8F1;font-family:var(--font);padding:48px 24px 90px;-webkit-font-smoothing:antialiased}
+
+.page-title{font-size:23px;font-weight:800;color:var(--indigo-dark);margin-bottom:6px;letter-spacing:-.01em}
+.page-sub{font-size:14.8px;color:#5C6584;margin-bottom:40px;max-width:680px;line-height:1.6}
+
+.flow-title{font-size:16.3px;font-weight:800;color:var(--indigo);margin-bottom:6px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.flow-title .n{width:22px;height:22px;border-radius:9px;background:var(--indigo);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-sub{font-size:14.8px;color:#5C6584;margin-bottom:24px;max-width:640px;line-height:1.6}
+.flow-block{margin-bottom:56px}
+
+.flow-row{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:30px}
+.flow-step{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.flow-arrow{display:flex;align-items:center;justify-content:center;width:34px;color:#A8B3CC;flex-shrink:0;margin-top:290px}
+.frame-label{font-size:13px;font-weight:700;color:var(--indigo);margin-bottom:12px;letter-spacing:.04em;text-transform:uppercase;text-align:center}
+.frame-label span{display:block;font-size:12px;font-weight:600;color:#96A0BC;text-transform:none;letter-spacing:0;margin-top:2px}
+
+/* ===== Phone frame ===== */
+.phone{width:300px;height:614px;background:var(--indigo-dark);border-radius:38px;padding:10px;box-shadow:0 24px 50px -10px rgba(13,20,56,.35),0 0 0 1px rgba(13,20,56,.06)}
+.screen.light{background:var(--bg);width:100%;height:100%;border-radius:30px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+/* ===== Status bar / topnav ===== */
+.statusbar-light{flex-shrink:0;height:40px;background:var(--white);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:13.3px;font-weight:700;color:var(--ltext);border-bottom:1px solid var(--border)}
+.topnav{flex-shrink:0;background:var(--white);border-bottom:1px solid var(--border);padding:0 16px;height:50px;display:flex;align-items:center;gap:12px}
+.back-btn{width:32px;height:32px;border-radius:12px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--ltext-2);flex-shrink:0}
+.topnav-title{font-size:16.3px;font-weight:800;color:var(--ltext)}
+
+/* ===== Vendor header (commandes) ===== */
+.vheader{flex-shrink:0;background:var(--white);padding:14px 16px 12px;border-bottom:1px solid var(--border)}
+.vheader-top{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.vavatar{width:38px;height:38px;border-radius:13px;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15.3px;font-weight:800;flex-shrink:0}
+.vheader-name{font-size:14.8px;font-weight:800;color:var(--ltext)}
+.vheader-campus{font-size:12.5px;color:var(--lmuted);font-weight:600;margin-top:1px}
+.icon-btn{width:34px;height:34px;border-radius:12px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--ltext-2);position:relative;flex-shrink:0}
+.icon-btn .notif{position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--orange);border:1.5px solid var(--white)}
+.avail-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:22px;font-size:13px;font-weight:800;cursor:pointer}
+.avail-badge.open{background:var(--green-light);color:var(--green)}
+.avail-badge.closed{background:var(--gray-light);color:var(--ltext-2)}
+.avail-dot{width:6px;height:6px;border-radius:50%}
+.avail-badge.open .avail-dot{background:var(--green)}
+.avail-badge.closed .avail-dot{background:var(--lmuted)}
+.avail-hint{margin-left:auto;font-size:12.5px;color:var(--lmuted);font-weight:700}
+
+/* ===== Tabs ===== */
+.tabs{flex-shrink:0;display:flex;background:var(--white);border-bottom:1px solid var(--border);padding:0 6px;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;padding:12px 10px;text-align:center;font-size:13.3px;font-weight:700;color:var(--lmuted);white-space:nowrap;border:none;background:none;font-family:inherit;position:relative;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab-btn.active{color:var(--indigo)}
+.tab-btn.active::after{content:'';position:absolute;bottom:-1px;left:12%;right:12%;height:3px;background:var(--orange);border-radius:5px 3px 0 0}
+.tab-badge{min-width:19px;height:19px;border-radius:10px;background:var(--gray-light);color:var(--ltext-2);font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.tab-btn.active .tab-badge{background:var(--orange);color:#fff}
+
+/* ===== Body ===== */
+.body{flex:1;overflow-y:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:12px}
+
+.section-label{font-size:12.5px;font-weight:700;color:var(--lmuted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ===== Order card ===== */
+.order-card{background:var(--white);border-radius:18px;padding:16px;box-shadow:0 4px 18px rgba(27,42,107,.09);border-left:4px solid var(--border)}
+.order-card.st-pending{border-left-color:var(--orange)}
+.order-card.st-prepa{border-left-color:var(--indigo)}
+.order-card.st-ready{border-left-color:var(--green)}
+.order-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.order-icon{width:36px;height:36px;border-radius:12px;background:var(--indigo-light);color:var(--indigo);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.order-num{font-size:14.8px;font-weight:800;color:var(--ltext)}
+.order-meta{font-size:12.5px;color:var(--lmuted);font-weight:600}
+.order-total{margin-left:auto;text-align:right}
+.order-total-val{font-size:15.3px;font-weight:800;color:var(--ltext)}
+.order-items-sub{font-size:13.3px;color:var(--ltext-2);line-height:1.55;margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--border)}
+.order-items-sub b{color:var(--ltext)}
+
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;padding:4px 10px;border-radius:22px}
+.status-badge.pending{background:var(--orange-light);color:var(--orange)}
+.status-badge.prepa{background:var(--indigo-light);color:var(--indigo)}
+.status-badge.ready{background:var(--green-light);color:var(--green)}
+.status-badge.received{background:var(--green-light);color:var(--green)}
+.status-badge.refused{background:var(--red-light);color:var(--red)}
+.status-badge.cancelled{background:var(--gray-light);color:var(--lmuted)}
+.status-badge.refunded{background:var(--orange-light);color:var(--orange)}
+
+/* Countdown */
+.countdown-box{background:var(--orange-light);border:1.5px solid rgba(240,120,64,.28);border-radius:16px;padding:14px;display:flex;align-items:center;gap:14px;margin-bottom:13px}
+.countdown-ring{position:relative;width:60px;height:60px;flex-shrink:0}
+.countdown-ring svg{transform:rotate(-90deg)}
+.countdown-ring .track{stroke:rgba(240,120,64,.2)}
+.countdown-ring .fill{stroke:var(--orange)}
+.countdown-time{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--orange);letter-spacing:-.02em}
+.countdown-text{flex:1}
+.countdown-label{font-size:14px;font-weight:800;color:var(--ltext);margin-bottom:2px}
+.countdown-sub{font-size:11.5px;color:var(--ltext-2);line-height:1.4}
+
+.order-actions{display:flex;gap:8px}
+.btn-refuse{flex:1;height:52px;border-radius:12px;border:1.5px solid #FECACA;background:var(--white);color:var(--red);font-family:inherit;font-size:14.3px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-accept{flex:1;height:52px;border-radius:12px;border:none;background:var(--green);color:#fff;font-family:inherit;font-size:14.3px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 6px 16px -4px rgba(22,163,74,.4)}
+
+/* Timeline */
+.timeline{display:flex;align-items:center;margin-bottom:12px}
+.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.tl-dot{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;z-index:2;background:var(--border);color:var(--lmuted)}
+.tl-step.done .tl-dot{background:var(--indigo);color:#fff}
+.tl-step.current .tl-dot{background:var(--orange);color:#fff;box-shadow:0 0 0 4px rgba(240,120,64,.18)}
+.tl-line{position:absolute;top:10px;left:50%;width:100%;height:2px;background:var(--border);z-index:1}
+.tl-step.done .tl-line{background:var(--indigo)}
+.tl-step:last-child .tl-line{display:none}
+.tl-label{font-size:11.5px;font-weight:700;color:var(--lmuted);margin-top:6px;text-align:center}
+.tl-step.done .tl-label,.tl-step.current .tl-label{color:var(--ltext)}
+
+.btn-fill{width:100%;height:54px;border-radius:14px;border:none;background:var(--orange);color:#fff;font-family:inherit;font-size:14.8px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 8px 18px -4px rgba(240,120,64,.4);margin-bottom:8px}
+.btn-outline{width:100%;height:50px;border-radius:14px;border:1.5px solid var(--border);background:var(--white);color:var(--ltext-2);font-family:inherit;font-size:14.3px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-outline.danger{border-color:#FECACA;color:var(--red)}
+
+/* Ready state */
+.ready-banner{background:var(--green-light);border:1px solid #BBF7D0;border-radius:14px;padding:12px 13px;margin-bottom:11px}
+.ready-banner-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ready-banner-title{font-size:14.3px;font-weight:800;color:var(--green)}
+.ready-banner-sub{font-size:13px;color:var(--ltext-2);line-height:1.55}
+
+/* Historique / accordéon */
+.hist-card{cursor:pointer}
+.hist-top-row{display:flex;align-items:center;justify-content:space-between}
+.hist-chevron{color:var(--lmuted)}
+.hist-card.open .hist-chevron{transform:rotate(180deg)}
+.hist-detail{margin-top:11px;padding-top:11px;border-top:1px solid var(--border)}
+.detail-row{display:flex;justify-content:space-between;font-size:13.3px;padding:4px 0;color:var(--ltext-2)}
+.detail-row b{color:var(--ltext);font-weight:700}
+.detail-motif{background:var(--red-light);border-radius:11px;padding:9px 11px;font-size:13px;color:var(--red);margin-top:8px;line-height:1.55}
+.detail-motif.refund{background:var(--orange-light);color:var(--orange)}
+
+/* Empty state */
+.empty-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:10px}
+.empty-tab-icon{width:52px;height:52px;border-radius:18px;background:var(--indigo-light);display:flex;align-items:center;justify-content:center;color:var(--indigo)}
+.empty-tab-icon.gray{background:var(--gray-light);color:var(--lmuted)}
+.empty-tab-title{font-size:14.8px;font-weight:800;color:var(--ltext)}
+.empty-tab-sub{font-size:13.3px;color:var(--lmuted);line-height:1.55;max-width:210px}
+
+/* ===== Sheet (bottom) ===== */
+.sheet-scrim{position:absolute;inset:0;background:rgba(13,20,56,.55);z-index:20;display:flex;align-items:flex-end}
+.sheet{width:100%;background:var(--white);border-radius:22px 20px 0 0;padding:18px 18px 22px;box-shadow:0 -10px 30px rgba(13,20,56,.2)}
+.sheet-handle{width:36px;height:4px;border-radius:5px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:15.8px;font-weight:800;color:var(--ltext);margin-bottom:4px}
+.sheet-sub{font-size:13.3px;color:var(--lmuted);margin-bottom:14px;line-height:1.5}
+.motif-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.motif-chip{padding:8px 13px;border-radius:22px;border:1.5px solid var(--border);font-size:13px;font-weight:700;color:var(--ltext-2)}
+.motif-chip.selected{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.sheet-textarea{border:1.5px solid var(--border);border-radius:14px;padding:10px 12px;font-family:inherit;font-size:13.8px;color:var(--ltext);width:100%;min-height:56px;margin-bottom:14px}
+.sheet-warn{background:var(--orange-light);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--orange);line-height:1.5;margin-bottom:14px;display:flex;gap:7px}
+.sheet-actions{display:flex;gap:8px}
+.btn-sheet-cancel{flex:1;height:50px;border-radius:13px;border:1.5px solid var(--border);background:var(--white);color:var(--ltext-2);font-family:inherit;font-size:14.3px;font-weight:700}
+.btn-sheet-confirm{flex:1;height:50px;border-radius:13px;border:none;background:var(--red);color:#fff;font-family:inherit;font-size:14.3px;font-weight:700}
+.btn-sheet-confirm.orange{background:var(--orange)}
+
+/* ===== Prompt overlay (disponibilité) ===== */
+.prompt-overlay{position:absolute;inset:0;background:rgba(13,20,56,.78);display:flex;align-items:center;justify-content:center;padding:22px;z-index:30}
+.prompt-card{background:var(--white);border-radius:22px;padding:26px 22px;text-align:center;width:100%;position:relative;overflow:hidden}
+.prompt-icon{width:54px;height:54px;border-radius:18px;background:var(--orange-light);color:var(--orange);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.prompt-title{font-size:17.3px;font-weight:800;color:var(--ltext);margin-bottom:8px;letter-spacing:-.01em}
+.prompt-sub{font-size:13.8px;color:var(--ltext-2);line-height:1.6;margin-bottom:22px}
+.prompt-actions{display:flex;gap:10px}
+.btn-prompt{flex:1;height:52px;border-radius:14px;font-family:inherit;font-size:14.8px;font-weight:700;border:none}
+.btn-prompt.yes{background:var(--green);color:#fff}
+.btn-prompt.no{background:var(--gray-light);color:var(--ltext-2)}
+
+/* ===== Wallet ===== */
+.wallet-card{background:linear-gradient(160deg,var(--indigo) 0%,var(--indigo-dark) 100%);border-radius:18px;padding:18px;position:relative;overflow:hidden}
+.wallet-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(240,120,64,.12)}
+.wallet-label{font-size:12.5px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;position:relative;z-index:1}
+.wallet-amount{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-bottom:16px;position:relative;z-index:1}
+.wallet-amount small{font-size:14.8px;font-weight:600;color:rgba(255,255,255,.45);margin-left:5px}
+.wallet-btns{display:flex;gap:8px;position:relative;z-index:1}
+.btn-wallet-fill{flex:1;height:44px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-family:inherit;font-size:14.3px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-wallet-ghost{flex:1;height:44px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);font-family:inherit;font-size:14.3px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+
+.debt-banner{background:var(--red-light);border:1px solid #FECACA;border-radius:16px;padding:13px 14px;display:flex;gap:10px}
+.debt-icon{color:var(--red);flex-shrink:0}
+.debt-title{font-size:14.3px;font-weight:800;color:var(--red);margin-bottom:3px}
+.debt-sub{font-size:13px;color:var(--ltext-2);line-height:1.55}
+
+.tx-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border)}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tx-icon.credit{background:var(--green-light);color:var(--green)}
+.tx-icon.debit{background:var(--red-light);color:var(--red)}
+.tx-icon.neutral{background:var(--indigo-light);color:var(--indigo)}
+.tx-info{flex:1;min-width:0}
+.tx-title{font-size:13.8px;font-weight:700;color:var(--ltext)}
+.tx-meta{font-size:12px;color:var(--lmuted);margin-top:1px}
+.tx-amount{font-size:14.3px;font-weight:800;flex-shrink:0}
+.tx-amount.credit{color:var(--green)}
+.tx-amount.debit{color:var(--red)}
+
+/* Retrait */
+.field-card{background:var(--white);border-radius:18px;padding:18px;box-shadow:0 4px 18px rgba(27,42,107,.08)}
+.field-card-label{font-size:12.5px;font-weight:700;color:var(--lmuted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.amount-display{font-size:30px;font-weight:800;color:var(--ltext);text-align:center;margin:8px 0 4px}
+.amount-sub{font-size:13px;color:var(--lmuted);text-align:center}
+.tier-box{background:var(--indigo-light);border-radius:14px;padding:12px 13px;font-size:13px;color:var(--indigo);line-height:1.6;margin-top:4px}
+.tier-box b{font-weight:800}
+.tier-list{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.tier-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ltext-2);padding:6px 8px;border-radius:10px}
+.tier-row.active{background:rgba(255,255,255,.6);color:var(--indigo);font-weight:800}
+
+/* ===== Profil ===== */
+.profile-header{background:var(--white);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 18px rgba(27,42,107,.09)}
+.profile-avatar{width:54px;height:54px;border-radius:17px;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+.profile-name{font-size:15.8px;font-weight:800;color:var(--ltext);margin-bottom:3px}
+.profile-meta{font-size:13px;color:var(--lmuted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.profile-campus-badge{font-size:12px;font-weight:700;color:var(--indigo);background:var(--indigo-light);padding:2px 8px;border-radius:8px}
+
+.section-title{font-size:13px;font-weight:800;color:var(--ltext-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.settings-card{background:var(--white);border-radius:18px;overflow:hidden;box-shadow:0 4px 18px rgba(27,42,107,.08)}
+
+.field-row{padding:12px 14px;border-bottom:1px solid var(--border)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:12px;font-weight:700;color:var(--lmuted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.field-static{font-size:14.8px;font-weight:700;color:var(--lmuted)}
+
+.toggle-row{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row-info{flex:1;min-width:0}
+.toggle-row-title{font-size:14.3px;font-weight:700;color:var(--ltext)}
+.toggle-row-sub{font-size:12px;color:var(--lmuted);margin-top:1px}
+.switch{position:relative;width:40px;height:23px;flex-shrink:0}
+.switch-track{position:absolute;inset:0;background:var(--border);border-radius:24px}
+.switch-track.on{background:var(--orange)}
+.switch-knob{position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch-track.on .switch-knob{transform:translateX(17px)}
+
+.nav-row{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.nav-row:last-child{border-bottom:none}
+.nav-row-icon{width:32px;height:32px;border-radius:12px;background:var(--indigo-light);color:var(--indigo);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-row-icon.danger{background:var(--red-light);color:var(--red)}
+.nav-row-info{flex:1;min-width:0}
+.nav-row-title{font-size:14.3px;font-weight:700;color:var(--ltext)}
+.nav-row-title.danger{color:var(--red)}
+.nav-row-sub{font-size:12px;color:var(--lmuted);margin-top:1px}
+.nav-row-chevron{color:var(--lmuted);flex-shrink:0}
+
+/* ===== Bottom nav ===== */
+.bottom-nav{flex-shrink:0;height:72px;background:var(--white);border-top:1px solid var(--border);display:flex;align-items:center;box-shadow:0 -4px 20px rgba(27,42,107,.07)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--lmuted)}
+.nav-item span{font-size:11px;font-weight:700}
+.nav-item.active{color:var(--indigo)}
+.nav-item.active span{font-weight:800}
+.nav-item svg{transition:none}
+.nav-item.active svg{background:var(--indigo-light);border-radius:12px;padding:7px;box-sizing:content-box;margin:-7px}
+.nav-pip{display:none}
+
+/* ============================================================
+   PARCOURS DE RETRAIT — écrans ajoutés (montant → moyen → PIN → succès)
+   ============================================================ */
+.amount-presets{display:flex;gap:8px;margin:12px 0 4px}
+.preset-chip{flex:1;text-align:center;padding:9px 0;border-radius:12px;border:1.5px solid var(--border);font-size:13.3px;font-weight:700;color:var(--text-2)}
+.preset-chip.selected{border-color:var(--orange);background:var(--orange-light);color:var(--orange)}
+
+.method-row{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--border);border-radius:15px;margin-bottom:10px}
+.method-row.selected{border-color:var(--indigo);background:var(--indigo-light)}
+.method-logo{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;color:#fff;flex-shrink:0}
+.method-info{flex:1;min-width:0}
+.method-name{font-size:14.3px;font-weight:700;color:var(--ltext)}
+.method-sub{font-size:12.5px;color:var(--lmuted);margin-top:1px}
+.method-radio{width:19px;height:19px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;position:relative}
+.method-radio.checked{border-color:var(--indigo)}
+.method-radio.checked::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--indigo)}
+
+.recap-card{background:var(--white);border-radius:18px;padding:17px 18px;box-shadow:0 4px 18px rgba(27,42,107,.08)}
+.recap-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.8px}
+.recap-row:last-child{border-bottom:none}
+.recap-row span:first-child{color:var(--lmuted)}
+.recap-row span:last-child{font-weight:700;color:var(--ltext)}
+.recap-row.total span:last-child{color:var(--orange);font-size:16.3px;font-weight:800}
+
+.pin-dots-light{display:flex;gap:16px;justify-content:center;margin:22px 0 10px}
+.pin-dot-light{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border);background:transparent}
+.pin-dot-light.filled{background:var(--orange);border-color:var(--orange)}
+.keypad-light{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:auto}
+.key-light{height:52px;border-radius:15px;background:var(--gray-light);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:var(--ltext)}
+.key-light.key-empty{background:transparent;border:none}
+.key-light.key-action{background:transparent;border:none;color:var(--lmuted);display:flex}
+
+.success-light{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+.success-light-check{width:64px;height:64px;border-radius:22px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 12px 26px -8px rgba(22,163,74,.4)}
+.success-light h2{font-size:18px;font-weight:800;color:var(--ltext);margin-bottom:8px;letter-spacing:-.01em}
+.success-light p{font-size:13.8px;color:var(--lmuted);line-height:1.6;max-width:220px;margin-bottom:24px}
+.success-recap{background:var(--gray-light);border-radius:14px;padding:12px 14px;width:100%;margin-bottom:22px}
+.success-recap-row{display:flex;justify-content:space-between;font-size:13.3px;padding:4px 0;color:var(--text-2)}
+.success-recap-row b{color:var(--ltext);font-weight:800}
+
+/* ============================================================
+   STATISTIQUES VENDEUR — écrans ajoutés (aide à la décision)
+   ============================================================ */
+.period-tabs{display:flex;gap:6px}
+.period-tab{flex:1;text-align:center;padding:8px 0;border-radius:12px;font-size:13px;font-weight:700;color:var(--lmuted);background:var(--white);border:1px solid var(--border)}
+.period-tab.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric-card{background:var(--white);border-radius:16px;padding:15px;box-shadow:0 4px 16px rgba(27,42,107,.07)}
+.metric-label{font-size:11.5px;font-weight:700;color:var(--lmuted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:7px}
+.metric-value{font-size:19px;font-weight:800;color:var(--ltext);margin-bottom:5px;letter-spacing:-.01em}
+.metric-delta{font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:3px}
+.metric-delta.up{color:var(--green)}
+.metric-delta.down{color:var(--red)}
+
+.chart-card{background:var(--white);border-radius:18px;padding:17px;box-shadow:0 4px 16px rgba(27,42,107,.07)}
+.chart-title{font-size:13.8px;font-weight:800;color:var(--ltext);margin-bottom:2px}
+.chart-sub{font-size:12.5px;color:var(--lmuted);margin-bottom:16px}
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:100px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bar{width:100%;border-radius:7px 5px 2px 2px;background:var(--indigo-light)}
+.bar.peak{background:var(--orange)}
+.bar-hour{font-size:10.5px;color:var(--lmuted);margin-top:5px;font-weight:700}
+
+.rank-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border)}
+.rank-row:last-child{border-bottom:none}
+.rank-num{width:22px;height:22px;border-radius:9px;background:var(--gray-light);color:var(--text-2);font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rank-num.top{background:var(--orange);color:#fff}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-size:13.8px;font-weight:700;color:var(--ltext)}
+.rank-bar-track{height:5px;background:var(--gray-light);border-radius:5px;margin-top:5px;overflow:hidden}
+.rank-bar-fill{height:100%;background:var(--indigo);border-radius:5px}
+.rank-count{font-size:13.3px;font-weight:800;color:var(--ltext);flex-shrink:0;text-align:right}
+.rank-count small{display:block;font-size:11.5px;font-weight:600;color:var(--lmuted)}
+
+.perf-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.perf-row:last-child{border-bottom:none}
+.perf-ring{position:relative;width:42px;height:42px;flex-shrink:0}
+.perf-ring svg{transform:rotate(-90deg)}
+.perf-ring .track{stroke:var(--gray-light)}
+.perf-ring .fill{stroke:var(--green)}
+.perf-ring.warn .fill{stroke:var(--orange)}
+.perf-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:var(--ltext)}
+.perf-info{flex:1}
+.perf-title{font-size:13.8px;font-weight:700;color:var(--ltext)}
+.perf-sub{font-size:12px;color:var(--lmuted);margin-top:1px}
+
+.insight-box{background:var(--indigo-light);border-radius:14px;padding:12px 13px;display:flex;gap:9px;font-size:13px;color:var(--indigo);line-height:1.55}
+.insight-box svg{flex-shrink:0;margin-top:1px}
+
+</style>
+</head>
+<body>
+
+<div class="page-title">kabakaba — Connexion vendeur</div>
+<div class="page-sub">Interface mobile réservée aux gérants de cantine. Le compte est créé exclusivement par l'équipe kabakaba depuis l'outil web ; le vendeur ne s'inscrit jamais lui-même. Deux parcours ci-dessous : la première connexion (identifiants fournis) et la reconnexion (code PIN).</div>
+
+<!-- ═══════════════════════════════════════════
+     FLUX 1 — PREMIÈRE CONNEXION
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">1</span>Flux 1 — Première connexion</div>
+  <div class="flow-sub">Le vendeur reçoit son numéro et un mot de passe temporaire de la part de l'équipe kabakaba (SMS ou appel). Il les saisit, confirme par OTP, puis remplace le mot de passe par un code PIN à 4 chiffres qui deviendra son seul moyen de connexion.</div>
+
+  <div class="flow-row">
+
+    <!-- ÉCRAN 1 — TÉLÉPHONE -->
+    <div class="flow-step">
+      <div class="frame-label">Écran 1 — Téléphone<span>Identifiant fourni par kabakaba</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="hero">
+          <div class="hero-top">
+            <div class="back-circle ghost"></div>
+            <div class="progress-pill">Étape 1 sur 4</div>
+          </div>
+          <div class="hero-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+          <h1>Connexion vendeur</h1>
+          <p>Entre le numéro de téléphone transmis par <b>l'équipe kabakaba</b> lors de la création de ton compte.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <label>Numéro de téléphone</label>
+            <div class="input-shell focus">
+              <span class="prefix">+228</span>
+              <input value="90 12 34 56" readonly>
+            </div>
+          </div>
+          <div class="hint-box">
+            <span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+            <span>Ce numéro est celui renseigné par kabakaba à la création de ta cantine. Contacte l'équipe s'il est incorrect.</span>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary">
+            Continuer
+            <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- ÉCRAN 2 — MOT DE PASSE TEMPORAIRE -->
+    <div class="flow-step">
+      <div class="frame-label">Écran 2 — Mot de passe<span>Temporaire, à usage unique</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="hero">
+          <div class="hero-top">
+            <div class="back-circle">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </div>
+            <div class="progress-pill">Étape 2 sur 4</div>
+          </div>
+          <div class="hero-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h1>Mot de passe temporaire</h1>
+          <p>Saisis le mot de passe communiqué par <b>l'équipe kabakaba</b> avec ton numéro.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <label>Mot de passe temporaire</label>
+            <div class="input-shell focus">
+              <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+              <input value="••••••••" readonly>
+              <span class="eye"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+            </div>
+          </div>
+          <div class="hint-box">
+            <span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+            <span>Ce mot de passe ne sert qu'à cette première connexion. Tu le remplaceras par un code PIN à l'étape suivante.</span>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-primary">
+            Se connecter
+            <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- ÉCRAN 3 — OTP SMS -->
+    <div class="flow-step">
+      <div class="frame-label">Écran 3 — Vérification OTP<span>Confirme que le numéro t'appartient</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="hero">
+          <div class="hero-top">
+            <div class="back-circle">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </div>
+            <div class="progress-pill">Étape 3 sur 4</div>
+          </div>
+          <div class="hero-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h1>Code de vérification</h1>
+          <p>Code envoyé par SMS au <b>+228 90 12 34 56</b>.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:75%"></div></div>
+        </div>
+        <div class="card">
+          <div class="otp-row">
+            <div class="otp-box filled">4</div>
+            <div class="otp-box filled">8</div>
+            <div class="otp-box filled">2</div>
+            <div class="otp-box cursor">1</div>
+            <div class="otp-box"></div>
+            <div class="otp-box"></div>
+          </div>
+          <div class="timer">Renvoyer le code dans <span>0:38</span></div>
+          <div class="resend" style="color:var(--muted-soft)">Renvoyer le code</div>
+          <div class="spacer"></div>
+          <button class="btn-primary">
+            Vérifier
+            <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- ÉCRAN 4 — CRÉATION DU PIN -->
+    <div class="flow-step">
+      <div class="frame-label">Écran 4 — Créer le code PIN<span>Remplace définitivement le mot de passe</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="hero">
+          <div class="hero-top">
+            <div class="back-circle">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </div>
+            <div class="progress-pill">Étape 4 sur 4</div>
+          </div>
+          <div class="hero-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5z"/></svg>
+          </div>
+          <h1>Crée ton code PIN</h1>
+          <p>Ce code à 4 chiffres remplacera ton mot de passe pour toutes tes prochaines connexions.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+        </div>
+        <div class="card">
+          <div class="pin-caption">Nouveau code PIN</div>
+          <div class="pin-dots">
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot active"></div>
+            <div class="pin-dot"></div>
+          </div>
+          <div class="hint-box">
+            <span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+            <span>Choisis un code que toi seul connais. Évite les suites simples comme 1234 ou 0000.</span>
+          </div>
+          <div class="keypad">
+            <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+            <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+            <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+            <div class="key key-empty"></div><div class="key">0</div>
+            <div class="key key-action"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- ÉCRAN 5 — CONFIRMATION DU PIN -->
+    <div class="flow-step">
+      <div class="frame-label">Écran 5 — Confirmer le PIN<span>Ressaisie pour éviter une erreur</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="hero">
+          <div class="hero-top">
+            <div class="back-circle">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </div>
+            <div class="progress-pill">Étape 4 sur 4</div>
+          </div>
+          <div class="hero-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5z"/></svg>
+          </div>
+          <h1>Confirme ton code</h1>
+          <p>Ressaisis le même code PIN pour le valider.</p>
+          <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+        </div>
+        <div class="card">
+          <div class="pin-caption">Confirme le code PIN</div>
+          <div class="pin-dots">
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+          </div>
+          <div class="spacer" style="min-height:8px"></div>
+          <div class="keypad">
+            <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+            <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+            <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+            <div class="key key-empty"></div><div class="key">0</div>
+            <div class="key key-action"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- ÉCRAN 6 — SUCCÈS -->
+    <div class="flow-step">
+      <div class="frame-label">Écran 6 — Compte activé<span>Bascule vers le tableau de bord</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar" style="color:#fff"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="success-hero">
+          <div class="success-check">
+            <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2>Compte activé !</h2>
+          <p>Ton code PIN est prêt. Tu peux désormais gérer les commandes de <b style="color:#fff">Chez Maman Afi</b> depuis l'application.</p>
+          <button class="btn-primary">
+            Accéder à mon tableau de bord
+            <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- PLACEHOLDER — TABLEAU DE BORD -->
+    <div class="flow-step">
+      <div class="frame-label">Prochaine étape<span>Non traité dans cette maquette</span></div>
+      <div class="next-ghost">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <div class="t">Tableau de bord vendeur</div>
+        <div class="s">Écran d'accueil et gestion des commandes — à construire à l'étape suivante, selon le statut du vendeur.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     FLUX 2 — RECONNEXION (CODE PIN)
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">2</span>Flux 2 — Reconnexion (session expirée / app relancée)</div>
+  <div class="flow-sub">Une fois le code PIN créé, il devient le seul moyen de connexion. Plus besoin de renumériser le téléphone ni le mot de passe : la cantine est reconnue automatiquement sur l'appareil, seul le PIN est demandé.</div>
+
+  <div class="flow-row">
+
+    <!-- ÉCRAN — BON RETOUR -->
+    <div class="flow-step">
+      <div class="frame-label">Écran unique — Bon retour<span>Verrouillage léger façon "lock screen"</span></div>
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="icons">📶 📡 🔋</span></div>
+        <div class="welcome-top">
+          <div class="avatar-circle">MA</div>
+          <div class="welcome-greet">Bon retour,</div>
+          <div class="welcome-name">Chez Maman Afi</div>
+          <div class="welcome-sub">Entre ton code PIN pour continuer</div>
+        </div>
+        <div class="welcome-body">
+          <div class="pin-dots" style="margin-top:20px">
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot filled"></div>
+            <div class="pin-dot active"></div>
+            <div class="pin-dot"></div>
+          </div>
+          <div class="spacer" style="min-height:6px"></div>
+          <div class="keypad">
+            <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+            <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+            <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+            <div class="key key-empty"></div><div class="key">0</div>
+            <div class="key key-action"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></div>
+          </div>
+          <div class="forgot-link">Code PIN oublié ?</div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- PLACEHOLDER — TABLEAU DE BORD -->
+    <div class="flow-step">
+      <div class="frame-label">Prochaine étape<span>Non traité dans cette maquette</span></div>
+      <div class="next-ghost">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <div class="t">Tableau de bord vendeur</div>
+        <div class="s">Même écran d'accueil que dans le flux 1, atteint plus directement.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div style="max-width:900px;margin:70px auto 0;border-top:2px dashed #C4CBE0;"></div>
+
+
+<div class="page-title">kabakaba — Dashboard vendeur</div>
+<div class="page-sub">Suite de la maquette : une fois connecté (téléphone + mot de passe temporaire + OTP + code PIN, ou PIN seul au retour), le vendeur arrive sur cette interface. Trois zones : Commandes (cœur du produit), Portefeuille, Profil. Design aligné sur le thème clair déjà utilisé côté étudiant après connexion.</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 1 — COMMANDES ENTRANTES
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">1</span>Commandes — nouvelles demandes</div>
+  <div class="flow-sub">Onglet par défaut à l'ouverture de l'app. Le vendeur a 5 minutes pour accepter ou refuser (§4.3 du CDC) ; passé ce délai, la commande est auto-annulée côté étudiant. Le refus exige un motif — obligatoire, saisi ici via une feuille (sheet) qui s'ouvre par-dessus la commande.</div>
+  <div class="flow-row">
+
+    <!-- Nouvelle commande — countdown actif -->
+    <div class="flow-step">
+      <div class="frame-label">Nouvelle commande<span>Countdown 5 min actif</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top">
+            <div class="vavatar">MA</div>
+            <div>
+              <div class="vheader-name">Chez Maman Afi</div>
+              <div class="vheader-campus">Campus UCAO</div>
+            </div>
+            <div style="margin-left:auto"></div>
+            <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="notif"></span></div>
+          </div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active">Nouvelles <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Préparation <span class="tab-badge">2</span></button>
+          <button class="tab-btn">Prêtes <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card st-pending">
+            <div class="order-top">
+              <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+              <div>
+                <div class="order-num">Commande #482</div>
+                <div class="order-meta">Reçue à 11:34</div>
+              </div>
+              <div class="order-total"><div class="order-total-val">1 100 tickets</div></div>
+            </div>
+            <div class="order-items-sub"><b>1×</b> Riz personnalisé (œuf, saucisse) · <b>À emporter — Take away</b></div>
+            <div class="countdown-box">
+              <div class="countdown-ring">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                  <circle class="track" cx="30" cy="30" r="26" fill="none" stroke-width="5"/>
+                  <circle class="fill" cx="30" cy="30" r="26" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="41"/>
+                </svg>
+                <div class="countdown-time">3:42</div>
+              </div>
+              <div class="countdown-text">
+                <div class="countdown-label">Réponds avant la fin du délai</div>
+                <div class="countdown-sub">Passé ce délai, la commande est annulée automatiquement</div>
+              </div>
+            </div>
+            <div class="order-actions">
+              <button class="btn-refuse"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Refuser</button>
+              <button class="btn-accept"><svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Accepter</button>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Sheet motif de refus -->
+    <div class="flow-step">
+      <div class="frame-label">Refuser la commande<span>Motif obligatoire (§4.3)</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top">
+            <div class="vavatar">MA</div>
+            <div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div>
+          </div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active">Nouvelles <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Préparation <span class="tab-badge">2</span></button>
+          <button class="tab-btn">Prêtes <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card st-pending">
+            <div class="order-top">
+              <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+              <div><div class="order-num">Commande #482</div><div class="order-meta">Reçue à 11:34</div></div>
+              <div class="order-total"><div class="order-total-val">1 100 tickets</div></div>
+            </div>
+            <div class="order-items-sub"><b>1×</b> Riz personnalisé (œuf, saucisse) · <b>À emporter — Take away</b></div>
+          </div>
+        </div>
+        <div class="sheet-scrim">
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">Pourquoi refuser cette commande ?</div>
+            <div class="sheet-sub">Le motif est transmis à l'étudiant. Ses tickets sont immédiatement recrédités.</div>
+            <div class="motif-grid">
+              <div class="motif-chip selected">Rupture de stock</div>
+              <div class="motif-chip">Cantine surchargée</div>
+              <div class="motif-chip">Erreur sur l'article</div>
+              <div class="motif-chip">Autre</div>
+            </div>
+            <div class="sheet-actions">
+              <button class="btn-sheet-cancel">Annuler</button>
+              <button class="btn-sheet-confirm">Confirmer le refus</button>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Empty state -->
+    <div class="flow-step">
+      <div class="frame-label">Aucune nouvelle commande<span>État par défaut, cantine ouverte</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top">
+            <div class="vavatar">MA</div>
+            <div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div>
+            <div class="icon-btn" style="margin-left:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          </div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active">Nouvelles <span class="tab-badge">0</span></button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn">Prêtes</button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="empty-tab">
+          <div class="empty-tab-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg></div>
+          <div class="empty-tab-title">Aucune commande pour l'instant</div>
+          <div class="empty-tab-sub">Les commandes des étudiants apparaîtront ici dès qu'ils passeront commande.</div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 2 — PRÉPARATION & REMISE
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">2</span>Commandes — préparation &amp; remise</div>
+  <div class="flow-sub">Après acceptation (§4.4), le vendeur peut encore annuler avec motif obligatoire. Une fois prête, l'action "Marquer comme prête" est irréversible : elle déclenche le débit étudiant et le crédit vendeur (§4.5). Un remboursement reste possible après, toujours avec motif (§4.7).</div>
+  <div class="flow-row">
+
+    <!-- En préparation -->
+    <div class="flow-step">
+      <div class="frame-label">En préparation<span>Annulation encore possible</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top">
+            <div class="vavatar">MA</div>
+            <div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div>
+          </div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn">Nouvelles</button>
+          <button class="tab-btn active">Préparation <span class="tab-badge">2</span></button>
+          <button class="tab-btn">Prêtes <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card st-prepa">
+            <div class="order-top">
+              <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+              <div><div class="order-num">Commande #479</div><div class="order-meta">Acceptée à 11:20</div></div>
+              <div class="order-total"><span class="status-badge prepa">En préparation</span></div>
+            </div>
+            <div class="order-items-sub"><b>1×</b> Fufu + soupe légumes · <b>Sur place</b> — 500 tickets</div>
+            <div class="timeline">
+              <div class="tl-step done"><div class="tl-dot"><svg width="10" height="10" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="tl-line"></div><div class="tl-label">Acceptée</div></div>
+              <div class="tl-step current"><div class="tl-dot">2</div><div class="tl-line"></div><div class="tl-label">Préparation</div></div>
+              <div class="tl-step"><div class="tl-dot">3</div><div class="tl-line"></div><div class="tl-label">Prête</div></div>
+            </div>
+            <button class="btn-fill"><svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Marquer comme prête</button>
+            <button class="btn-outline danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Annuler la commande</button>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Sheet motif annulation -->
+    <div class="flow-step">
+      <div class="frame-label">Annuler la commande<span>Motif obligatoire (§4.4) — tickets recrédités</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top"><div class="vavatar">MA</div><div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div></div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn">Nouvelles</button>
+          <button class="tab-btn active">Préparation <span class="tab-badge">2</span></button>
+          <button class="tab-btn">Prêtes</button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card st-prepa">
+            <div class="order-top">
+              <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+              <div><div class="order-num">Commande #479</div><div class="order-meta">Acceptée à 11:20</div></div>
+              <div class="order-total"><span class="status-badge prepa">En préparation</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-scrim">
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">Pourquoi annuler cette commande ?</div>
+            <div class="sheet-sub">Les 500 tickets seront immédiatement recrédités à l'étudiant.</div>
+            <div class="motif-grid">
+              <div class="motif-chip">Ingrédient manquant</div>
+              <div class="motif-chip selected">Erreur de préparation</div>
+              <div class="motif-chip">Autre</div>
+            </div>
+            <div class="sheet-actions">
+              <button class="btn-sheet-cancel">Retour</button>
+              <button class="btn-sheet-confirm">Confirmer l'annulation</button>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Prête -->
+    <div class="flow-step">
+      <div class="frame-label">Commande prête<span>Débit/crédit déjà effectués (§4.5)</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top"><div class="vavatar">MA</div><div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div></div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn">Nouvelles</button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn active">Prêtes <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card st-ready">
+            <div class="order-top">
+              <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+              <div><div class="order-num">Commande #474</div><div class="order-meta">Prête depuis 12 min</div></div>
+              <div class="order-total"><span class="status-badge ready">Prête</span></div>
+            </div>
+            <div class="order-items-sub"><b>2×</b> Menu poulet braisé · <b>Sachet</b> — 1 600 tickets</div>
+            <div class="ready-banner">
+              <div class="ready-banner-top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="ready-banner-title">En attente de retrait</span></div>
+              <div class="ready-banner-sub">L'étudiant a été notifié. Le montant est déjà crédité sur ton portefeuille. Sans confirmation de sa part sous 1h, la commande sera validée automatiquement.</div>
+            </div>
+            <button class="btn-outline danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Rembourser cette commande</button>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Sheet remboursement -->
+    <div class="flow-step">
+      <div class="frame-label">Rembourser<span>Motif obligatoire · avance possible par kabakaba (§4.7)</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top"><div class="vavatar">MA</div><div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div></div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn">Nouvelles</button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn active">Prêtes <span class="tab-badge">1</span></button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card st-ready">
+            <div class="order-top">
+              <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+              <div><div class="order-num">Commande #474</div><div class="order-meta">Prête depuis 12 min</div></div>
+              <div class="order-total"><span class="status-badge ready">Prête</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-scrim">
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">Rembourser 1 600 tickets ?</div>
+            <div class="sheet-sub">Motif obligatoire avant soumission.</div>
+            <div class="motif-grid">
+              <div class="motif-chip selected">Article manquant</div>
+              <div class="motif-chip">Non conforme</div>
+              <div class="motif-chip">Autre</div>
+            </div>
+            <div class="sheet-warn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>Si ton solde est insuffisant, kabakaba avance le remboursement. La somme devient une créance sur ton compte, récupérée automatiquement — le retrait est bloqué tant qu'elle est active.</span>
+            </div>
+            <div class="sheet-actions">
+              <button class="btn-sheet-cancel">Annuler</button>
+              <button class="btn-sheet-confirm orange">Confirmer</button>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 3 — HISTORIQUE
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">3</span>Commandes — historique</div>
+  <div class="flow-sub">Tout ce qui est terminé : reçues (manuelles ou auto à 1h), refusées, annulées, remboursées. Accordéon dépliable pour retrouver le motif d'une commande passée.</div>
+  <div class="flow-row">
+
+    <div class="flow-step">
+      <div class="frame-label">Historique<span>Carte dépliée = détail + motif</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top"><div class="vavatar">MA</div><div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div></div>
+          <div class="avail-badge open"><span class="avail-dot"></span>Cantine ouverte</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn">Nouvelles</button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn">Prêtes</button>
+          <button class="tab-btn active">Historique</button>
+        </div>
+        <div class="body">
+          <div class="order-card hist-card open">
+            <div class="hist-top-row">
+              <div class="order-top" style="margin-bottom:0">
+                <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+                <div><div class="order-num">Commande #470</div><div class="order-meta">Hier, 12:05</div></div>
+                <div class="order-total"><span class="status-badge received">Reçue</span></div>
+              </div>
+              <svg class="hist-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="hist-detail">
+              <div class="detail-row"><span>Article</span><b>Riz sauce arachide</b></div>
+              <div class="detail-row"><span>Conditionnement</span><b>Sur place</b></div>
+              <div class="detail-row"><span>Montant</span><b>700 tickets</b></div>
+              <div class="detail-row"><span>Confirmation</span><b>Manuelle par l'étudiant</b></div>
+            </div>
+          </div>
+
+          <div class="order-card hist-card">
+            <div class="hist-top-row">
+              <div class="order-top" style="margin-bottom:0">
+                <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+                <div><div class="order-num">Commande #468</div><div class="order-meta">Hier, 11:47</div></div>
+                <div class="order-total"><span class="status-badge refused">Refusée</span></div>
+              </div>
+              <svg class="hist-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <div class="order-card hist-card">
+            <div class="hist-top-row">
+              <div class="order-top" style="margin-bottom:0">
+                <div class="order-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+                <div><div class="order-num">Commande #465</div><div class="order-meta">Avant-hier, 13:02</div></div>
+                <div class="order-total"><span class="status-badge refunded">Remboursée</span></div>
+              </div>
+              <svg class="hist-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 4 — DISPONIBILITÉ
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">4</span>Disponibilité de la cantine</div>
+  <div class="flow-sub">Trois mécanismes coexistent (§3.3) : la question du matin, la question de 16h, et le toggle manuel disponible à tout moment via le badge en haut de l'écran Commandes.</div>
+  <div class="flow-row">
+
+    <!-- Prompt matin -->
+    <div class="flow-step">
+      <div class="frame-label">Prompt du matin<span>"Vous vendez aujourd'hui ?"</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>7:30</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top"><div class="vavatar">MA</div><div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div></div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active">Nouvelles</button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn">Prêtes</button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="empty-tab"><div class="empty-tab-icon gray"></div></div>
+        <div class="prompt-overlay">
+          <div class="prompt-card">
+            <div class="prompt-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg></div>
+            <div class="prompt-title">Vous vendez aujourd'hui ?</div>
+            <div class="prompt-sub">Réponds pour indiquer aux étudiants si ta cantine est ouverte. Sans réponse, ton dernier état reste actif.</div>
+            <div class="prompt-actions">
+              <button class="btn-prompt no">Non, fermé</button>
+              <button class="btn-prompt yes">Oui, j'ouvre</button>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Prompt 16h -->
+    <div class="flow-step">
+      <div class="frame-label">Prompt de 16h<span>"Avez-vous terminé pour aujourd'hui ?"</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>16:00</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top"><div class="vavatar">MA</div><div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div></div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active">Nouvelles</button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn">Prêtes</button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="empty-tab"><div class="empty-tab-icon gray"></div></div>
+        <div class="prompt-overlay">
+          <div class="prompt-card">
+            <div class="prompt-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg></div>
+            <div class="prompt-title">Avez-vous terminé pour aujourd'hui ?</div>
+            <div class="prompt-sub">Si tu confirmes, ta cantine passe hors ligne et les étudiants ne pourront plus commander.</div>
+            <div class="prompt-actions">
+              <button class="btn-prompt no">Pas encore</button>
+              <button class="btn-prompt yes">Oui, je ferme</button>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Cantine fermée -->
+    <div class="flow-step">
+      <div class="frame-label">Cantine fermée<span>Badge tappable pour rouvrir manuellement</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>16:05</span><span>📶 📡 🔋</span></div>
+        <div class="vheader">
+          <div class="vheader-top">
+            <div class="vavatar">MA</div>
+            <div><div class="vheader-name">Chez Maman Afi</div><div class="vheader-campus">Campus UCAO</div></div>
+            <div class="icon-btn" style="margin-left:auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          </div>
+          <div class="avail-badge closed"><span class="avail-dot"></span>Cantine fermée</div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active">Nouvelles</button>
+          <button class="tab-btn">Préparation</button>
+          <button class="tab-btn">Prêtes</button>
+          <button class="tab-btn">Historique</button>
+        </div>
+        <div class="empty-tab">
+          <div class="empty-tab-icon gray"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div>
+          <div class="empty-tab-title">Ta cantine est hors ligne</div>
+          <div class="empty-tab-sub">Les étudiants voient "Ce vendeur n'est pas disponible pour le moment" et ne peuvent pas commander.</div>
+          <button class="btn-fill" style="margin-top:6px;width:auto;padding:0 26px">Rouvrir maintenant</button>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 5 — PORTEFEUILLE
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">5</span>Portefeuille vendeur</div>
+  <div class="flow-sub">Solde en FCFA, historique des mouvements, et parcours de retrait complet : montant → moyen mobile money → confirmation par code PIN → traitement. Soumis aux paliers de frais du §5.3. Le retrait est bloqué tant qu'une créance est active (avance de remboursement, §4.7).</div>
+  <div class="flow-row">
+
+    <!-- Portefeuille home -->
+    <div class="flow-step">
+      <div class="frame-label">Portefeuille<span>Solde disponible + historique</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Portefeuille</div></div>
+        <div class="body">
+          <div class="wallet-card">
+            <div class="wallet-label">Solde disponible</div>
+            <div class="wallet-amount">18 400 <small>FCFA</small></div>
+            <div class="wallet-btns">
+              <button class="btn-wallet-fill"><svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Retirer</button>
+              <button class="btn-wallet-ghost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v5h5"/><path d="M3 8a9 9 0 1 0 2.6-5.4"/></svg>Historique</button>
+            </div>
+          </div>
+          <div class="section-label">Mouvements récents</div>
+          <div class="field-card" style="padding:4px 14px">
+            <div class="tx-row">
+              <div class="tx-icon credit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg></div>
+              <div class="tx-info"><div class="tx-title">Commande #474 — prête</div><div class="tx-meta">Aujourd'hui, 11:52</div></div>
+              <div class="tx-amount credit">+1 600</div>
+            </div>
+            <div class="tx-row">
+              <div class="tx-icon debit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+              <div class="tx-info"><div class="tx-title">Remboursement #465</div><div class="tx-meta">Hier, 13:10</div></div>
+              <div class="tx-amount debit">-700</div>
+            </div>
+            <div class="tx-row">
+              <div class="tx-icon neutral"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+              <div class="tx-info"><div class="tx-title">Retrait vers Moov Money</div><div class="tx-meta">Lun. 18 août</div></div>
+              <div class="tx-amount debit">-12 000</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Retrait -->
+    <div class="flow-step">
+      <div class="frame-label">Retrait<span>Palier de frais affiché selon le montant (§5.3)</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav">
+          <div class="back-btn"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="topnav-title">Retirer des fonds</div>
+        </div>
+        <div class="body">
+          <div class="field-card">
+            <div class="field-card-label">Montant à retirer</div>
+            <div class="amount-display">12 000 <span style="font-size:16px;color:var(--lmuted)">FCFA</span></div>
+            <div class="amount-sub">Solde disponible : 18 400 FCFA</div>
+            <div class="amount-presets">
+              <div class="preset-chip">5 000</div>
+              <div class="preset-chip selected">12 000</div>
+              <div class="preset-chip">Tout retirer</div>
+            </div>
+          </div>
+          <div class="tier-box">
+            <b>Palier applicable : 10 000 FCFA et plus.</b> Les frais vers l'opérateur mobile money sont pris en charge par kabakaba. Les frais de retrait de l'opérateur restent à ta charge.
+            <div class="tier-list">
+              <div class="tier-row">&lt; 10 000 FCFA — tous frais à ta charge</div>
+              <div class="tier-row active">10 000 – 29 999 FCFA — frais plateforme couverts</div>
+              <div class="tier-row">≥ 30 000 FCFA — tous frais couverts</div>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn-fill" style="margin-top:14px">Continuer</button>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Choix du moyen de retrait -->
+    <div class="flow-step">
+      <div class="frame-label">Moyen de retrait<span>Numéro mobile money du vendeur</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav">
+          <div class="back-btn"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="topnav-title">Moyen de retrait</div>
+        </div>
+        <div class="body">
+          <div class="section-label">12 000 FCFA vers</div>
+          <div class="method-row selected">
+            <div class="method-logo" style="background:#0057B8">Moov</div>
+            <div class="method-info"><div class="method-name">Moov Flooz</div><div class="method-sub">+228 90 12 34 56</div></div>
+            <div class="method-radio checked"></div>
+          </div>
+          <div class="method-row">
+            <div class="method-logo" style="background:#FCC93B;color:#0D1438">T-Money</div>
+            <div class="method-info"><div class="method-name">Mixx by Yas (TMoney)</div><div class="method-sub">+228 90 12 34 56</div></div>
+            <div class="method-radio"></div>
+          </div>
+          <div class="hint-box" style="margin-top:2px">
+            <span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+            <span>Le numéro affiché est celui renseigné à la création de ton compte. Contacte kabakaba pour le modifier.</span>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn-fill" style="margin-top:14px">Continuer</button>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Récapitulatif + confirmation PIN -->
+    <div class="flow-step">
+      <div class="frame-label">Confirmation par PIN<span>Sécurise l'action avant exécution</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav">
+          <div class="back-btn"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="topnav-title">Confirmer le retrait</div>
+        </div>
+        <div class="body">
+          <div class="recap-card">
+            <div class="recap-row"><span>Montant</span><span>12 000 FCFA</span></div>
+            <div class="recap-row"><span>Vers</span><span>Moov Flooz — •••• 34 56</span></div>
+            <div class="recap-row"><span>Frais opérateur</span><span>À ta charge</span></div>
+            <div class="recap-row total"><span>Solde restant après retrait</span><span>6 400 FCFA</span></div>
+          </div>
+          <div class="pin-caption" style="margin-top:18px">Entre ton code PIN pour confirmer</div>
+          <div class="pin-dots-light">
+            <div class="pin-dot-light filled"></div>
+            <div class="pin-dot-light filled"></div>
+            <div class="pin-dot-light filled"></div>
+            <div class="pin-dot-light"></div>
+          </div>
+          <div class="keypad-light">
+            <div class="key-light">1</div><div class="key-light">2</div><div class="key-light">3</div>
+            <div class="key-light">4</div><div class="key-light">5</div><div class="key-light">6</div>
+            <div class="key-light">7</div><div class="key-light">8</div><div class="key-light">9</div>
+            <div class="key-light key-empty"></div><div class="key-light">0</div>
+            <div class="key-light key-action"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Succès retrait -->
+    <div class="flow-step">
+      <div class="frame-label">Retrait envoyé<span>Traitement opérateur : quelques minutes</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="success-light">
+          <div class="success-light-check">
+            <svg width="28" height="28" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2>Retrait en cours</h2>
+          <p>Ton retrait a été transmis à Moov Flooz. Les fonds arrivent généralement en quelques minutes.</p>
+          <div class="success-recap">
+            <div class="success-recap-row"><span>Montant</span><b>12 000 FCFA</b></div>
+            <div class="success-recap-row"><span>Vers</span><b>•••• 34 56</b></div>
+            <div class="success-recap-row"><span>Nouveau solde</span><b>6 400 FCFA</b></div>
+          </div>
+          <button class="btn-fill" style="margin:0">Retour au portefeuille</button>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Créance active -->
+    <div class="flow-step">
+      <div class="frame-label">Créance active<span>Retrait bloqué jusqu'à régularisation (§5.3)</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Portefeuille</div></div>
+        <div class="body">
+          <div class="wallet-card">
+            <div class="wallet-label">Solde disponible</div>
+            <div class="wallet-amount">3 200 <small>FCFA</small></div>
+            <div class="wallet-btns">
+              <button class="btn-wallet-fill" style="opacity:.45;box-shadow:none"><svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Retirer</button>
+              <button class="btn-wallet-ghost"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v5h5"/><path d="M3 8a9 9 0 1 0 2.6-5.4"/></svg>Historique</button>
+            </div>
+          </div>
+          <div class="debt-banner">
+            <svg class="debt-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+              <div class="debt-title">Créance active : 4 500 FCFA</div>
+              <div class="debt-sub">kabakaba a avancé un remboursement pour la commande #465. Cette somme sera prélevée automatiquement sur tes prochaines commandes. Le retrait reste bloqué jusqu'au remboursement intégral.</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 6 — STATISTIQUES DE VENTE
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">6</span>Statistiques — Mes ventes</div>
+  <div class="flow-sub">Hors périmètre strict du cahier des charges (§9.4-9.7 réserve les analyses comparatives à l'outil web Admin/Supervision), mais utile au vendeur pour piloter sa propre activité. Volontairement limité aux données qu'il génère lui-même — aucune comparaison avec d'autres cantines, aucune note client (les avis restent internes à la Supervision, §4.6). À valider avec toi avant développement : c'est un ajout de périmètre, pas une fonctionnalité actuellement spécifiée.</div>
+  <div class="flow-row">
+
+    <!-- Vue d'ensemble -->
+    <div class="flow-step">
+      <div class="frame-label">Vue d'ensemble<span>Chiffre d'affaires, volume, panier moyen</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Mes ventes</div></div>
+        <div class="tabs">
+          <button class="tab-btn active">Vue d'ensemble</button>
+          <button class="tab-btn">Performance</button>
+          <button class="tab-btn">Top articles</button>
+          <button class="tab-btn">Affluence</button>
+        </div>
+        <div class="body">
+          <div class="period-tabs">
+            <div class="period-tab">Jour</div>
+            <div class="period-tab active">Semaine</div>
+            <div class="period-tab">Mois</div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-label">Chiffre d'affaires</div>
+              <div class="metric-value">94 600 <span style="font-size:11px;font-weight:700;color:var(--lmuted)">FCFA</span></div>
+              <div class="metric-delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>+14% vs sem. dernière</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Commandes</div>
+              <div class="metric-value">156</div>
+              <div class="metric-delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>+9% vs sem. dernière</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Panier moyen</div>
+              <div class="metric-value">606 <span style="font-size:11px;font-weight:700;color:var(--lmuted)">FCFA</span></div>
+              <div class="metric-delta up"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>+4% vs sem. dernière</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Taux de complétion</div>
+              <div class="metric-value">92%</div>
+              <div class="metric-delta down"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>-2% vs sem. dernière</div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Chiffre d'affaires — 7 derniers jours</div>
+            <div class="chart-sub">En FCFA, par jour</div>
+            <div class="bar-chart">
+              <div class="bar-col"><div class="bar" style="height:38%"></div><div class="bar-hour">Lun</div></div>
+              <div class="bar-col"><div class="bar" style="height:52%"></div><div class="bar-hour">Mar</div></div>
+              <div class="bar-col"><div class="bar" style="height:47%"></div><div class="bar-hour">Mer</div></div>
+              <div class="bar-col"><div class="bar" style="height:63%"></div><div class="bar-hour">Jeu</div></div>
+              <div class="bar-col"><div class="bar peak" style="height:100%"></div><div class="bar-hour">Ven</div></div>
+              <div class="bar-col"><div class="bar" style="height:71%"></div><div class="bar-hour">Sam</div></div>
+              <div class="bar-col"><div class="bar" style="height:29%"></div><div class="bar-hour">Dim</div></div>
+            </div>
+          </div>
+          <div class="insight-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+            <span>Le vendredi génère 40% de plus que ta moyenne hebdomadaire. De quoi envisager d'élargir ton offre ce jour-là.</span>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Performance opérationnelle -->
+    <div class="flow-step">
+      <div class="frame-label">Performance<span>Acceptation, refus, annulation, réactivité</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Mes ventes</div></div>
+        <div class="tabs">
+          <button class="tab-btn">Vue d'ensemble</button>
+          <button class="tab-btn active">Performance</button>
+          <button class="tab-btn">Top articles</button>
+          <button class="tab-btn">Affluence</button>
+        </div>
+        <div class="body">
+          <div class="period-tabs">
+            <div class="period-tab">Jour</div>
+            <div class="period-tab active">Semaine</div>
+            <div class="period-tab">Mois</div>
+          </div>
+          <div class="settings-card">
+            <div class="perf-row">
+              <div class="perf-ring">
+                <svg width="42" height="42" viewBox="0 0 42 42"><circle class="track" cx="21" cy="21" r="17" fill="none" stroke-width="4"/><circle class="fill" cx="21" cy="21" r="17" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="4.3"/></svg>
+                <div class="perf-pct">96%</div>
+              </div>
+              <div class="perf-info"><div class="perf-title">Taux d'acceptation</div><div class="perf-sub">150 commandes acceptées sur 156 reçues</div></div>
+            </div>
+            <div class="perf-row">
+              <div class="perf-ring">
+                <svg width="42" height="42" viewBox="0 0 42 42"><circle class="track" cx="21" cy="21" r="17" fill="none" stroke-width="4"/><circle class="fill" cx="21" cy="21" r="17" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="103.6"/></svg>
+                <div class="perf-pct">3%</div>
+              </div>
+              <div class="perf-info"><div class="perf-title">Taux de refus</div><div class="perf-sub">5 commandes refusées, motif principal : rupture de stock</div></div>
+            </div>
+            <div class="perf-row">
+              <div class="perf-ring">
+                <svg width="42" height="42" viewBox="0 0 42 42"><circle class="track" cx="21" cy="21" r="17" fill="none" stroke-width="4"/><circle class="fill" cx="21" cy="21" r="17" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="105.7"/></svg>
+                <div class="perf-pct">1%</div>
+              </div>
+              <div class="perf-info"><div class="perf-title">Annulation après acceptation</div><div class="perf-sub">1 commande annulée en cours de préparation</div></div>
+            </div>
+            <div class="perf-row">
+              <div class="perf-ring">
+                <svg width="42" height="42" viewBox="0 0 42 42"><circle class="track" cx="21" cy="21" r="17" fill="none" stroke-width="4"/><circle class="fill" cx="21" cy="21" r="17" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="106.8" stroke-dashoffset="16"/></svg>
+                <div class="perf-pct">1:42</div>
+              </div>
+              <div class="perf-info"><div class="perf-title">Temps moyen de réponse</div><div class="perf-sub">Sur un délai autorisé de 5:00</div></div>
+            </div>
+          </div>
+          <div class="insight-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+            <span>Ton temps de réponse est resté sous 2 minutes toute la semaine — de quoi limiter les annulations automatiques à 5 minutes.</span>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Top articles -->
+    <div class="flow-step">
+      <div class="frame-label">Top articles<span>Quoi prioriser en stock</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Mes ventes</div></div>
+        <div class="tabs">
+          <button class="tab-btn">Vue d'ensemble</button>
+          <button class="tab-btn">Performance</button>
+          <button class="tab-btn active">Top articles</button>
+          <button class="tab-btn">Affluence</button>
+        </div>
+        <div class="body">
+          <div class="period-tabs">
+            <div class="period-tab">Jour</div>
+            <div class="period-tab active">Semaine</div>
+            <div class="period-tab">Mois</div>
+          </div>
+          <div class="settings-card" style="padding:4px 14px">
+            <div class="rank-row">
+              <div class="rank-num top">1</div>
+              <div class="rank-info"><div class="rank-name">Riz sauce arachide</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:100%"></div></div></div>
+              <div class="rank-count">58<small>ventes</small></div>
+            </div>
+            <div class="rank-row">
+              <div class="rank-num">2</div>
+              <div class="rank-info"><div class="rank-name">Fufu + soupe légumes</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:71%"></div></div></div>
+              <div class="rank-count">41<small>ventes</small></div>
+            </div>
+            <div class="rank-row">
+              <div class="rank-num">3</div>
+              <div class="rank-info"><div class="rank-name">Menu poulet braisé</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:57%"></div></div></div>
+              <div class="rank-count">33<small>ventes</small></div>
+            </div>
+            <div class="rank-row">
+              <div class="rank-num">4</div>
+              <div class="rank-info"><div class="rank-name">Riz personnalisé</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:33%"></div></div></div>
+              <div class="rank-count">19<small>ventes</small></div>
+            </div>
+            <div class="rank-row">
+              <div class="rank-num">5</div>
+              <div class="rank-info"><div class="rank-name">Attiéké poisson</div><div class="rank-bar-track"><div class="rank-bar-fill" style="width:9%"></div></div></div>
+              <div class="rank-count">5<small>ventes</small></div>
+            </div>
+          </div>
+          <div class="insight-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+            <span>Le riz sauce arachide représente plus d'1 commande sur 3. Sécurise ton stock sur cet article en priorité.</span>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="flow-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+    <!-- Affluence horaire -->
+    <div class="flow-step">
+      <div class="frame-label">Affluence<span>Quand renforcer le stock ou le service</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Mes ventes</div></div>
+        <div class="tabs">
+          <button class="tab-btn">Vue d'ensemble</button>
+          <button class="tab-btn">Performance</button>
+          <button class="tab-btn">Top articles</button>
+          <button class="tab-btn active">Affluence</button>
+        </div>
+        <div class="body">
+          <div class="period-tabs">
+            <div class="period-tab">Jour</div>
+            <div class="period-tab active">Semaine</div>
+            <div class="period-tab">Mois</div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Commandes par heure</div>
+            <div class="chart-sub">Moyenne sur les 7 derniers jours, 8h – 18h</div>
+            <div class="bar-chart">
+              <div class="bar-col"><div class="bar" style="height:8%"></div><div class="bar-hour">8h</div></div>
+              <div class="bar-col"><div class="bar" style="height:14%"></div><div class="bar-hour">9h</div></div>
+              <div class="bar-col"><div class="bar" style="height:22%"></div><div class="bar-hour">10h</div></div>
+              <div class="bar-col"><div class="bar" style="height:48%"></div><div class="bar-hour">11h</div></div>
+              <div class="bar-col"><div class="bar peak" style="height:100%"></div><div class="bar-hour">12h</div></div>
+              <div class="bar-col"><div class="bar peak" style="height:88%"></div><div class="bar-hour">13h</div></div>
+              <div class="bar-col"><div class="bar" style="height:31%"></div><div class="bar-hour">14h</div></div>
+              <div class="bar-col"><div class="bar" style="height:18%"></div><div class="bar-hour">15h</div></div>
+              <div class="bar-col"><div class="bar" style="height:12%"></div><div class="bar-hour">16h</div></div>
+            </div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-label">Pic de la semaine</div>
+              <div class="metric-value">12h – 13h</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Part du pic</div>
+              <div class="metric-value">72%</div>
+            </div>
+          </div>
+          <div class="insight-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>
+            <span>72% de tes commandes arrivent entre 11h30 et 13h30. Prépare davantage de stock avant cette plage pour réduire les refus par rupture.</span>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span><div class="nav-pip"></div></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span></div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOC 7 — PROFIL
+     ═══════════════════════════════════════════ -->
+<div class="flow-block">
+  <div class="flow-title"><span class="n">7</span>Profil &amp; réglages</div>
+  <div class="flow-sub">Les infos de la cantine sont gérées par l'équipe kabakaba depuis l'outil web (§2.3) — elles apparaissent ici en lecture seule. Le vendeur ne peut agir que sur sa disponibilité, son code PIN et sa session.</div>
+  <div class="flow-row">
+
+    <div class="flow-step">
+      <div class="frame-label">Profil<span>Infos en lecture seule + réglages actionnables</span></div>
+      <div class="phone"><div class="screen light">
+        <div class="statusbar-light"><span>9:41</span><span>📶 📡 🔋</span></div>
+        <div class="topnav"><div class="topnav-title">Profil</div></div>
+        <div class="body">
+          <div class="profile-header">
+            <div class="profile-avatar">MA</div>
+            <div>
+              <div class="profile-name">Chez Maman Afi</div>
+              <div class="profile-meta"><span class="profile-campus-badge">Campus UCAO</span><span>Vendeur actif</span></div>
+            </div>
+          </div>
+
+          <div class="section-title">Disponibilité</div>
+          <div class="settings-card">
+            <div class="toggle-row">
+              <div class="toggle-row-info"><div class="toggle-row-title">Cantine ouverte</div><div class="toggle-row-sub">Visible et commandable par les étudiants</div></div>
+              <div class="switch"><div class="switch-track on"><div class="switch-knob"></div></div></div>
+            </div>
+          </div>
+
+          <div class="section-title">Établissement</div>
+          <div class="settings-card">
+            <div class="field-row">
+              <div class="field-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Géré par kabakaba</div>
+              <div class="field-static">Nom de la cantine</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Campus affilié</div>
+              <div class="field-static">UCAO</div>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Numéro de contact</div>
+              <div class="field-static">+228 90 12 34 56</div>
+            </div>
+          </div>
+
+          <div class="section-title">Sécurité</div>
+          <div class="settings-card">
+            <div class="nav-row">
+              <div class="nav-row-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5z"/></svg></div>
+              <div class="nav-row-info"><div class="nav-row-title">Modifier mon code PIN</div><div class="nav-row-sub">Dernière modification il y a 12 jours</div></div>
+              <svg class="nav-row-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="nav-row">
+              <div class="nav-row-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+              <div class="nav-row-info"><div class="nav-row-title">Notifications</div><div class="nav-row-sub">Nouvelles commandes, créance</div></div>
+              <svg class="nav-row-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+
+          <div class="section-title">Compte</div>
+          <div class="settings-card">
+            <div class="nav-row">
+              <div class="nav-row-icon danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
+              <div class="nav-row-info"><div class="nav-row-title danger">Se déconnecter</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg><span>Commandes</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h11"/><path d="M17 12h.01"/></svg><span>Portefeuille</span></div>
+          <div class="nav-item"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Stats</span></div>
+          <div class="nav-item active"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg><span>Profil</span><div class="nav-pip"></div></div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+
+</body>
+</html>
