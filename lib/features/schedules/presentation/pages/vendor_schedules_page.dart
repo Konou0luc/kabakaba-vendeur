@@ -45,6 +45,7 @@ class VendorSchedulesPage extends ConsumerWidget {
                     subtitle:
                         'Ajoute les jours et heures où ta cantine est habituellement ouverte.',
                     icon: Icons.schedule_rounded,
+                    framed: true,
                   );
                 }
                 final sorted = [...items]..sort(
@@ -157,7 +158,8 @@ class _ScheduleTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0F1B2A6B),

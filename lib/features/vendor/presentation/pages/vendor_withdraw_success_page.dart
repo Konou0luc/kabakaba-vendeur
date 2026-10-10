@@ -40,41 +40,33 @@ class _VendorWithdrawSuccessPageState
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(30),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
               Container(
-                width: 64,
-                height: 64,
+                width: 72,
+                height: 72,
                 decoration: BoxDecoration(
-                  color: AppColors.green,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.green.withValues(alpha: 0.4),
-                      blurRadius: 26,
-                      offset: const Offset(0, 12),
-                      spreadRadius: -8,
-                    ),
-                  ],
+                  color: AppColors.greenLight,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.green.withValues(alpha: 0.2)),
                 ),
                 child: const Icon(
                   Icons.check_rounded,
-                  color: Colors.white,
-                  size: 28,
+                  color: AppColors.green,
+                  size: 34,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               Text(
                 'Retrait en cours',
                 style: AppTextStyles.successLightTitle,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                width: 240,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
                 child: Text(
                   'Ta demande de retrait a été enregistrée auprès de ${widget.operator}.',
                   style: AppTextStyles.successLightSubtitle,
@@ -84,13 +76,11 @@ class _VendorWithdrawSuccessPageState
               const SizedBox(height: 24),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 decoration: BoxDecoration(
-                  color: AppColors.grayLight,
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.borderLight),
                 ),
                 child: Column(
                   children: [
@@ -98,6 +88,8 @@ class _VendorWithdrawSuccessPageState
                       label: 'Montant',
                       value: CurrencyFormatter.formatTickets(widget.amount),
                     ),
+                    const Divider(height: 18, color: AppColors.borderLight),
+                    _Row(label: 'Opérateur', value: widget.operator),
                   ],
                 ),
               ),
@@ -126,20 +118,17 @@ class _Row extends StatelessWidget {
   const _Row({required this.label, required this.value});
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: AppTextStyles.successRecapRow.copyWith(
-              color: AppColors.textSecondaryLight,
-            ),
+    return Row(
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.successRecapRow.copyWith(
+            color: AppColors.textSecondaryLight,
           ),
-          const Spacer(),
-          Text(value, style: AppTextStyles.recapRowBold),
-        ],
-      ),
+        ),
+        const Spacer(),
+        Text(value, style: AppTextStyles.recapRowBold),
+      ],
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,7 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
 import 'core/config/app_config.dart';
+import 'core/push/push_notifications.dart';
 import 'core/storage/session_store.dart';
+
+Future<void> _bootstrapFirebase() async {
+  try {
+    await ensureFirebaseInitialized();
+    print('KABA_PUSH: bootstrap OK');
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  } catch (error, stack) {
+    print('KABA_PUSH: bootstrap échec: $error\n$stack');
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +25,8 @@ Future<void> main() async {
   // Échoue au démarrage plutôt qu'à la première requête si la configuration
   // de build est incohérente (URL relative, HTTP en production).
   AppConfig.assertValid();
+
+  await _bootstrapFirebase();
 
   // Le HttpClient Dart n'atteint pas fonts.gstatic.com sur certains
   // téléphones (TECNO) : on n'essaie plus de télécharger la police au runtime.

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
@@ -5,7 +6,16 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static final TextStyle _base = GoogleFonts.plusJakartaSans();
+  /// Plus Jakarta Sans n'embarque pas correctement le glyphe d'espace sur
+  /// Linux (google_fonts + allowRuntimeFetching=false) : les mots se collent.
+  /// On garde la police de la maquette partout ailleurs.
+  static final TextStyle _base =
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.linux
+      ? const TextStyle(
+          fontFamily: 'Ubuntu',
+          fontFamilyFallback: ['Noto Sans', 'DejaVu Sans', 'sans-serif'],
+        )
+      : GoogleFonts.plusJakartaSans();
 
   static TextTheme getTextTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;

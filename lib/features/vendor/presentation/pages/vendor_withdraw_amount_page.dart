@@ -20,8 +20,7 @@ class VendorWithdrawAmountPage extends ConsumerStatefulWidget {
 
 class _VendorWithdrawAmountPageState
     extends ConsumerState<VendorWithdrawAmountPage> {
-  late final TextEditingController _amountController =
-      TextEditingController();
+  late final TextEditingController _amountController = TextEditingController();
   int? _selectedPreset;
   String? _tier;
 
@@ -56,7 +55,8 @@ class _VendorWithdrawAmountPageState
     setState(() {
       _amountController.text = amount.toString();
       _amountController.selection = TextSelection.collapsed(
-          offset: _amountController.text.length);
+        offset: _amountController.text.length,
+      );
       _selectedPreset = amount;
       _tier = _computeTier();
     });
@@ -66,7 +66,8 @@ class _VendorWithdrawAmountPageState
     setState(() {
       _amountController.text = widget.vendor.balanceFcfa.toInt().toString();
       _amountController.selection = TextSelection.collapsed(
-          offset: _amountController.text.length);
+        offset: _amountController.text.length,
+      );
       _selectedPreset = -1;
       _tier = _computeTier();
     });
@@ -94,29 +95,32 @@ class _VendorWithdrawAmountPageState
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: AppColors.borderLight),
                     boxShadow: const [
                       BoxShadow(
-                          color: Color(0x141B2A6B),
-                          blurRadius: 18,
-                          offset: Offset(0, 4))
+                        color: Color(0x0A1B2A6B),
+                        blurRadius: 20,
+                        offset: Offset(0, 6),
+                      ),
                     ],
                   ),
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
                   child: Column(
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('MONTANT À RETIRER',
-                            style: AppTextStyles.fieldCardLabel),
+                      Text(
+                        'MONTANT À RETIRER',
+                        style: AppTextStyles.fieldCardLabel.copyWith(
+                          letterSpacing: 0.8,
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 10),
                       TextField(
                         controller: _amountController,
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
+                          FilteringTextInputFormatter.digitsOnly,
                         ],
                         onChanged: _onAmountChange,
                         style: AppTextStyles.amountDisplay,
@@ -124,45 +128,57 @@ class _VendorWithdrawAmountPageState
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
+                          filled: false,
                           contentPadding: EdgeInsets.zero,
                           hintText: '0',
                           hintStyle: TextStyle(
-                            color: AppColors.textSecondaryLight,
+                            color: AppColors.textMutedLight,
                             fontSize: 30,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      const Text('FCFA',
-                          style: TextStyle(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 16,
-                          )),                      const SizedBox(height: 4),
-                      Text(
-                        'Solde disponible : ${CurrencyFormatter.formatTickets(widget.vendor.balanceFcfa)}',
-                        style: AppTextStyles.amountSub,
+                      const SizedBox(height: 2),
+                      Text('FCFA', style: AppTextStyles.amountSub),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.indigoLight,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Solde disponible : ${CurrencyFormatter.formatTickets(widget.vendor.balanceFcfa)}',
+                          style: AppTextStyles.amountSub.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
                         children: [
-                          Expanded(
-                              child: _Preset(
-                                  label: '5 000',
-                                  selected: _selectedPreset == 5000,
-                                  onTap: () => _selectPreset(5000))),
-                          const SizedBox(width: 8),
-                          Expanded(
-                              child: _Preset(
-                                  label: '12 000',
-                                  selected: _selectedPreset == 12000,
-                                  onTap: () => _selectPreset(12000))),
-                          const SizedBox(width: 8),
-                          Expanded(
-                              child: _Preset(
-                                  label: 'Tout retirer',
-                                  selected: _selectedPreset == -1,
-                                  onTap: _selectAll)),
+                          _Preset(
+                            label: '5 000',
+                            selected: _selectedPreset == 5000,
+                            onTap: () => _selectPreset(5000),
+                          ),
+                          _Preset(
+                            label: '12 000',
+                            selected: _selectedPreset == 12000,
+                            onTap: () => _selectPreset(12000),
+                          ),
+                          _Preset(
+                            label: 'Tout retirer',
+                            selected: _selectedPreset == -1,
+                            onTap: _selectAll,
+                          ),
                         ],
                       ),
                     ],
@@ -170,25 +186,34 @@ class _VendorWithdrawAmountPageState
                 ),
                 const SizedBox(height: 12),
                 _TierBox(activeTier: _tier),
-                const SizedBox(height: 24),
-                KabaButton(
-                  text: 'Continuer',
-                  icon: const Icon(Icons.arrow_forward_rounded,
-                      color: Colors.white, size: 16),
-                  onPressed: _isValid
-                      ? () {
-                          final amount =
-                              int.parse(_amountController.text);
-                          Navigator.of(context).push(MaterialPageRoute(
+              ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: KabaButton(
+                text: 'Continuer',
+                icon: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                onPressed: _isValid
+                    ? () {
+                        final amount = int.parse(_amountController.text);
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
                             builder: (_) => VendorWithdrawMethodPage(
                               vendor: widget.vendor,
                               amount: amount,
                             ),
-                          ));
-                        }
-                      : null,
-                ),
-              ],
+                          ),
+                        );
+                      }
+                    : null,
+              ),
             ),
           ),
         ],
@@ -201,30 +226,31 @@ class _Preset extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _Preset(
-      {required this.label, required this.selected, required this.onTap});
+  const _Preset({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: selected ? AppColors.accent : AppColors.borderLight,
-              width: 1.5),
-          color: selected ? AppColors.orangeLight : Colors.transparent,
+            color: selected ? AppColors.accent : AppColors.borderLight,
+            width: 1.5,
+          ),
+          color: selected ? AppColors.orangeLight : AppColors.grayLight,
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: AppTextStyles.presetChip.copyWith(
-              color: selected
-                  ? AppColors.accent
-                  : AppColors.textPrimaryLight,
-            ),
+        child: Text(
+          label,
+          style: AppTextStyles.presetChip.copyWith(
+            color: selected ? AppColors.accent : AppColors.textPrimaryLight,
           ),
         ),
       ),
@@ -235,57 +261,41 @@ class _Preset extends StatelessWidget {
 class _TierBox extends StatelessWidget {
   final String? activeTier;
   const _TierBox({this.activeTier});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.indigoLight,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: _title(),
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
-                ),
-                const TextSpan(
-                  text:
-                      ' Les frais vers l\'opérateur mobile money sont pris en charge par kabakaba. Les frais de retrait de l\'opérateur restent à ta charge.',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 13,
-                    height: 1.6,
-                  ),
-                ),
-              ],
+          Text(
+            _title(),
+            style: AppTextStyles.insightText.copyWith(
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),
-          Column(
-            children: [
-              _TierRow(
-                label: '< 10 000 FCFA — tous frais à ta charge',
-                active: activeTier == 'low',
-              ),
-              _TierRow(
-                label:
-                    '10 000 – 29 999 FCFA — frais plateforme couverts',
-                active: activeTier == 'mid',
-              ),
-              _TierRow(
-                label: '≥ 30 000 FCFA — tous frais couverts',
-                active: activeTier == 'high',
-              ),
-            ],
+          Text(
+            'Les frais vers l’opérateur mobile money sont pris en charge par kabakaba. Les frais de retrait de l’opérateur restent à ta charge.',
+            style: AppTextStyles.insightText,
+          ),
+          const SizedBox(height: 12),
+          _TierRow(
+            label: '< 10 000 FCFA — tous frais à ta charge',
+            active: activeTier == 'low',
+          ),
+          _TierRow(
+            label: '10 000 – 29 999 FCFA — frais plateforme couverts',
+            active: activeTier == 'mid',
+          ),
+          _TierRow(
+            label: '≥ 30 000 FCFA — tous frais couverts',
+            active: activeTier == 'high',
           ),
         ],
       ),
@@ -310,21 +320,22 @@ class _TierRow extends StatelessWidget {
   final String label;
   final bool active;
   const _TierRow({required this.label, required this.active});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: active
-            ? Colors.white.withValues(alpha: 0.6)
-            : Colors.transparent,
+        color: active ? Colors.white.withValues(alpha: 0.7) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 7,
+            height: 7,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: active
@@ -332,12 +343,13 @@ class _TierRow extends StatelessWidget {
                   : AppColors.textSecondaryLight.withValues(alpha: 0.4),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 13,
+                height: 1.35,
                 color: active
                     ? AppColors.primary
                     : AppColors.textSecondaryLight,

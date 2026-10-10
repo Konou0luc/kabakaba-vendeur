@@ -44,6 +44,7 @@ class VendorNotificationsPage extends ConsumerWidget {
                     subtitle:
                         'Les commandes, retraits et alertes de créance apparaîtront ici.',
                     icon: Icons.notifications_none_rounded,
+                    framed: true,
                   );
                 }
                 return RefreshIndicator(
@@ -130,13 +131,14 @@ class _NotificationTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
           color: notification.isRead
               ? Colors.white
               : AppColors.indigoLight.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderLight),
           boxShadow: const [
             BoxShadow(
               color: Color(0x0F1B2A6B),

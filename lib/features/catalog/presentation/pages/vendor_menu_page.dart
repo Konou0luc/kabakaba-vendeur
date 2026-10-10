@@ -9,6 +9,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/kaba_button.dart';
 import '../../../../shared/widgets/light_app_bar.dart';
+import '../../../../shared/widgets/remote_photo.dart';
 import '../../../../shared/widgets/vendor_input.dart';
 import '../../../vendor/data/vendor_profile_repository.dart';
 import '../../data/catalog_repository.dart';
@@ -47,6 +48,7 @@ class VendorMenuPage extends ConsumerWidget {
                     subtitle:
                         'Ajoute tes articles pour que les étudiants puissent commander.',
                     icon: Icons.restaurant_menu_rounded,
+                    framed: true,
                   );
                 }
                 return RefreshIndicator(
@@ -94,6 +96,7 @@ class _MenuTile extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0F1B2A6B),
@@ -104,6 +107,23 @@ class _MenuTile extends ConsumerWidget {
       ),
       child: Row(
         children: [
+          RemotePhoto(
+            url: item.imageUrl,
+            width: 56,
+            height: 56,
+            radius: 14,
+            fallback: Container(
+              width: 56,
+              height: 56,
+              color: AppColors.indigoLight,
+              child: const Icon(
+                Icons.restaurant_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

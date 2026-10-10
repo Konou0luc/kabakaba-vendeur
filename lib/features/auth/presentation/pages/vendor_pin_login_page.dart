@@ -85,68 +85,97 @@ class _VendorPinLoginPageState extends ConsumerState<VendorPinLoginPage> {
 
     return Scaffold(
       backgroundColor: AppColors.indigoDark,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-          child: Column(
-            children: [
-              const Spacer(),
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  color: AppColors.white.withValues(alpha: 0.12),
-                  border: Border.all(
-                    color: AppColors.white.withValues(alpha: 0.14),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.lock_rounded,
-                  color: AppColors.accent,
-                  size: 28,
-                ),
+      body: Stack(
+        children: [
+          Positioned(
+            top: -60,
+            right: -50,
+            child: Container(
+              width: 170,
+              height: 170,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accent.withValues(alpha: 0.16),
               ),
-              const SizedBox(height: 18),
-              Text('Bon retour', style: AppTextStyles.heroTitle),
-              const SizedBox(height: 6),
-              Text(
-                state.phone == null
-                    ? 'Saisis ton code à ${state.pinLength} chiffres.'
-                    : '+228 ${PhoneFormatter.formatDisplay(state.phone!)}',
-                style: AppTextStyles.heroSubtitle,
-              ),
-              const SizedBox(height: 28),
-              SystemPinField(
-                controller: _controller,
-                focusNode: _focus,
-                length: state.pinLength,
-                enabled: !state.isSubmitting && !state.pinLocked,
-                onChanged: _onChanged,
-              ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 36,
-                child: state.isSubmitting
-                    ? const CircularProgressIndicator(
-                        color: AppColors.accent,
-                        strokeWidth: 2,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: state.isSubmitting ? null : _useAnotherAccount,
-                child: Text(
-                  'Utiliser un autre compte',
-                  style: AppTextStyles.resendText.copyWith(
-                    color: AppColors.accent,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            bottom: -70,
+            left: -40,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.white.withValues(alpha: 0.04),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              child: Column(
+                children: [
+                  const Spacer(),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.white.withValues(alpha: 0.12),
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.14),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      color: AppColors.accent,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text('Bon retour', style: AppTextStyles.heroTitle),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.phone == null
+                        ? 'Saisis ton code à ${state.pinLength} chiffres.'
+                        : '+228 ${PhoneFormatter.formatDisplay(state.phone!)}',
+                    style: AppTextStyles.heroSubtitle,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  SystemPinField(
+                    controller: _controller,
+                    focusNode: _focus,
+                    length: state.pinLength,
+                    enabled: !state.isSubmitting && !state.pinLocked,
+                    onChanged: _onChanged,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 36,
+                    child: state.isSubmitting
+                        ? const CircularProgressIndicator(
+                            color: AppColors.accent,
+                            strokeWidth: 2,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: state.isSubmitting ? null : _useAnotherAccount,
+                    child: Text(
+                      'Utiliser un autre compte',
+                      style: AppTextStyles.resendText.copyWith(
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

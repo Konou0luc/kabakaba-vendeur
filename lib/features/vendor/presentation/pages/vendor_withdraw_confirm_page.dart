@@ -100,24 +100,26 @@ class _VendorWithdrawConfirmPageState
                 final remaining =
                     (widget.vendor.balanceFcfa - recap.debitedFromBalance)
                         .clamp(0, double.maxFinite);
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                        children: [
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: AppColors.borderLight),
                           boxShadow: const [
                             BoxShadow(
-                              color: Color(0x141B2A6B),
-                              blurRadius: 18,
-                              offset: Offset(0, 4),
+                              color: Color(0x0A1B2A6B),
+                              blurRadius: 20,
+                              offset: Offset(0, 6),
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.fromLTRB(17, 17, 17, 17),
+                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
                         child: Column(
                           children: [
                             _RecapRow(
@@ -187,47 +189,69 @@ class _VendorWithdrawConfirmPageState
                       ),
                       if (recap.lines.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        ...recap.lines.map(
-                          (line) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(line, style: AppTextStyles.hintText),
-                            ),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.orangeLight,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: recap.lines
+                                .map(
+                                  (line) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      line,
+                                      style: AppTextStyles.hintBoxLight,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           ),
                         ),
                       ],
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          onPressed: _loading ? null : () => _confirm(recap),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                        ],
+                      ),
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : () => _confirm(recap),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
                             ),
-                          ),
-                          child: _loading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Confirmer le retrait',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                )
-                              : const Text(
-                                  'Confirmer le retrait',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
-                                ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),

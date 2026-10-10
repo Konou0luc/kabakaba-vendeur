@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../models/vendor_model.dart';
+import 'remote_photo.dart';
 
 class VendorHeader extends StatelessWidget {
   final VendorModel? vendor;
@@ -29,24 +30,32 @@ class VendorHeader extends StatelessWidget {
     final initials = vendor?.initials ?? '··';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: AppColors.primary,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.indigoLight, width: 3),
             ),
-            child: Center(
-              child: Text(
-                initials,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
-                  color: Colors.white,
+            clipBehavior: Clip.antiAlias,
+            child: RemotePhoto(
+              url: vendor?.logoUrl,
+              width: 48,
+              height: 48,
+              radius: 13,
+              fallback: Center(
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

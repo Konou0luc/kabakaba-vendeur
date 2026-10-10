@@ -22,64 +22,63 @@ class BottomNavBar extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
         child: Container(
-          height: 72,
+          height: 68,
           decoration: BoxDecoration(
             color: AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: AppColors.borderLight.withValues(alpha: 0.55),
-            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.borderLight),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x0D0D1A6B),
-                blurRadius: 20,
-                offset: Offset(0, -4),
+                color: Color(0x141B2A6B),
+                blurRadius: 24,
+                offset: Offset(0, 8),
               ),
             ],
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(items.length, (index) {
               final item = items[index];
               final selected = index == currentIndex;
               return Expanded(
                 child: InkWell(
                   onTap: () => onTap?.call(index),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(18),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        margin: const EdgeInsets.only(bottom: 2),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: selected
                               ? AppColors.primary
-                              : AppColors.indigoLight,
-                          borderRadius: BorderRadius.circular(14),
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           item.icon,
                           color: selected
                               ? AppColors.white
-                              : AppColors.textSecondaryLight,
+                              : AppColors.textMutedLight,
                           size: 20,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         item.label,
                         style: AppTextStyles.navItemLabel.copyWith(
                           color: selected
                               ? AppColors.primary
-                              : AppColors.textSecondaryLight,
+                              : AppColors.textMutedLight,
                           fontWeight: selected
                               ? FontWeight.w800
-                              : FontWeight.w500,
+                              : FontWeight.w600,
+                          fontSize: 10,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

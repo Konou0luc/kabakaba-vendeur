@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "234320774252",
+    "project_id": "kabakaba-43a55",
+    "storage_bucket": "kabakaba-43a55.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234320774252:android:f1c774010c3a4341f60449",
+        "android_client_info": {
+          "package_name": "app.kabakaba.vendeur"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMGHfFELXCulFmGsQtoFtSWrNEd05Ju3g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:234320774252:android:693c70adfcecb773f60449",
+        "android_client_info": {
+          "package_name": "com.example.kabakaba"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMGHfFELXCulFmGsQtoFtSWrNEd05Ju3g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

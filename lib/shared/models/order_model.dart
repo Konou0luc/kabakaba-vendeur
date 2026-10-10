@@ -144,8 +144,9 @@ class OrderModel {
   /// commande n'en porte pas.
   final String? packagingName;
 
-  /// Motif de refus, d'annulation ou de remboursement.
+  /// Motif de refus, d'annulation, de remboursement, ou message « prête ».
   final String? reason;
+  final String? pickupCode;
   final DateTime createdAt;
   final DateTime? readyAt;
   final DateTime? confirmedAt;
@@ -162,10 +163,18 @@ class OrderModel {
     required this.items,
     this.packagingName,
     this.reason,
+    this.pickupCode,
     required this.createdAt,
     this.readyAt,
     this.confirmedAt,
   });
+
+  /// Numéro à communiquer à la récupération.
+  String get displayCode {
+    final code = pickupCode?.trim();
+    if (code != null && code.isNotEmpty) return code.toUpperCase();
+    return shortReference;
+  }
 
   /// Référence courte affichable, l'`id` étant un UUID.
   String get shortReference => id.length <= 6
@@ -193,6 +202,7 @@ class OrderModel {
           .toList(growable: false),
       packagingName: json.nested('packagingOption')?.optionalString('name'),
       reason: json.optionalString('reason'),
+      pickupCode: json.optionalString('pickupCode'),
       createdAt: json.requireDateTime('createdAt'),
       readyAt: json.optionalDateTime('readyAt'),
       confirmedAt: json.optionalDateTime('confirmedAt'),
@@ -222,6 +232,7 @@ class OrderModel {
       items: items,
       packagingName: packagingName,
       reason: reason ?? this.reason,
+      pickupCode: pickupCode,
       createdAt: createdAt,
       readyAt: readyAt,
       confirmedAt: confirmedAt,

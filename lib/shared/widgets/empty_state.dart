@@ -8,6 +8,7 @@ class EmptyState extends StatelessWidget {
   final IconData? icon;
   final bool isGray;
   final Widget? action;
+  final bool framed;
 
   const EmptyState({
     super.key,
@@ -16,6 +17,7 @@ class EmptyState extends StatelessWidget {
     this.icon,
     this.isGray = false,
     this.action,
+    this.framed = false,
   });
 
   @override
@@ -23,37 +25,78 @@ class EmptyState extends StatelessWidget {
     final iconColor = isGray ? AppColors.textSecondaryLight : AppColors.primary;
     final iconBg = isGray ? AppColors.grayLight : AppColors.indigoLight;
 
-    return Center(
+    final content = Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
                 color: iconBg,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: AppColors.borderLight),
               ),
-              child: icon != null
-                  ? Icon(icon!, size: 24, color: iconColor)
-                  : const SizedBox.shrink(),
+              child: Center(
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: icon != null
+                      ? Icon(icon, size: 26, color: iconColor)
+                      : const SizedBox.shrink(),
+                ),
+              ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
             Text(
               title,
-              style: AppTextStyles.emptyTitle,
+              style: AppTextStyles.emptyTitle.copyWith(
+                fontSize: 16,
+                letterSpacing: -0.3,
+              ),
               textAlign: TextAlign.center,
             ),
-            Text(
-              subtitle,
-              style: AppTextStyles.emptySub,
-              textAlign: TextAlign.center,
+            const SizedBox(height: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 280),
+              child: Text(
+                subtitle,
+                style: AppTextStyles.emptySub,
+                textAlign: TextAlign.center,
+              ),
             ),
-            if (action != null) ...[const SizedBox(height: 14), action!],
+            if (action != null) ...[const SizedBox(height: 18), action!],
           ],
         ),
+      ),
+    );
+
+    if (!framed) return content;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(20, 36, 20, 36),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.borderLight),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A1B2A6B),
+              blurRadius: 20,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: content,
       ),
     );
   }

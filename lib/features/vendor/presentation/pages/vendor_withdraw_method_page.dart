@@ -45,11 +45,30 @@ class _VendorWithdrawMethodPageState
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    '${widget.amount} FCFA vers',
-                    style: AppTextStyles.sectionLabel,
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.indigoLight,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'MONTANT À ENVOYER',
+                        style: AppTextStyles.fieldCardLabel,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${widget.amount} FCFA',
+                        style: AppTextStyles.flowTitle,
+                      ),
+                    ],
                   ),
                 ),
                 _MethodRow(
@@ -78,27 +97,32 @@ class _VendorWithdrawMethodPageState
                   icon: Icons.info_outline_rounded,
                   isLight: true,
                 ),
-                const SizedBox(height: 24),
-                KabaButton(
-                  text: 'Continuer',
-                  icon: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => VendorWithdrawConfirmPage(
-                          vendor: widget.vendor,
-                          amount: widget.amount,
-                          operator: _selected,
-                        ),
-                      ),
-                    );
-                  },
-                ),
               ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: KabaButton(
+                text: 'Continuer',
+                icon: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => VendorWithdrawConfirmPage(
+                        vendor: widget.vendor,
+                        amount: widget.amount,
+                        operator: _selected,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -135,14 +159,14 @@ class _MethodRow extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: selected ? AppColors.indigoLight : Colors.white,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.borderLight,
             width: 1.5,
           ),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x141B2A6B),
+              color: Color(0x0A1B2A6B),
               blurRadius: 18,
               offset: Offset(0, 4),
             ),

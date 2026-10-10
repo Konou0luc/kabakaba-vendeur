@@ -66,8 +66,13 @@ class VendorOrdersController
 
   /// Passage en « prête » : c'est cette transition qui libère le séquestre
   /// vers le solde de la cantine, d'où l'invalidation du profil.
-  Future<void> markReady(String orderId) =>
-      _transition(orderId, OrderStatus.ready, refreshesBalance: true);
+  Future<void> markReady(String orderId, {required String message}) =>
+      _transition(
+        orderId,
+        OrderStatus.ready,
+        reason: message,
+        refreshesBalance: true,
+      );
 
   Future<void> cancel(String orderId, String reason) => _transition(
     orderId,

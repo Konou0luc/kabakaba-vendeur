@@ -36,6 +36,7 @@ class VendorTransactionHistoryPage extends ConsumerWidget {
                     title: 'Aucune transaction',
                     subtitle: 'L\'historique apparaîtra ici.',
                     icon: Icons.history_rounded,
+                    framed: true,
                   );
                 }
                 return RefreshIndicator(
@@ -92,7 +93,8 @@ class _TxTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
         boxShadow: const [
           BoxShadow(
               color: Color(0x0F1B2A6B),

@@ -273,7 +273,7 @@ class _WalletCard extends StatelessWidget {
     final blocked = vendor.withdrawalBlocked;
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -281,44 +281,75 @@ class _WalletCard extends StatelessWidget {
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x141B2A6B),
-            blurRadius: 18,
-            offset: Offset(0, 4),
+            color: Color(0x1F1B2A6B),
+            blurRadius: 24,
+            offset: Offset(0, 10),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Text('SOLDE DISPONIBLE', style: AppTextStyles.walletLabel),
-          const SizedBox(height: 6),
-          Text(
-            CurrencyFormatter.formatTickets(vendor.balanceFcfa),
-            style: AppTextStyles.walletAmount,
+          Positioned(
+            top: -48,
+            right: -36,
+            child: Container(
+              width: 140,
+              height: 140,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accent.withValues(alpha: 0.16),
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _WalletBtn(
-                  icon: Icons.arrow_upward_rounded,
-                  label: 'Retirer',
-                  filled: true,
-                  enabled: !blocked,
-                  onTap: onWithdraw,
-                ),
+          Positioned(
+            bottom: -56,
+            left: -28,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.white.withValues(alpha: 0.04),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _WalletBtn(
-                  icon: Icons.history_rounded,
-                  label: 'Historique',
-                  filled: false,
-                  onTap: onHistory,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('SOLDE DISPONIBLE', style: AppTextStyles.walletLabel),
+                const SizedBox(height: 8),
+                Text(
+                  CurrencyFormatter.formatTickets(vendor.balanceFcfa),
+                  style: AppTextStyles.walletAmount,
                 ),
-              ),
-            ],
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _WalletBtn(
+                        icon: Icons.arrow_upward_rounded,
+                        label: 'Retirer',
+                        filled: true,
+                        enabled: !blocked,
+                        onTap: onWithdraw,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _WalletBtn(
+                        icon: Icons.history_rounded,
+                        label: 'Historique',
+                        filled: false,
+                        onTap: onHistory,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

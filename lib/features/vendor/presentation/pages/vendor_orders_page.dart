@@ -83,14 +83,23 @@ class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
             child: current.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 children: [
-                  const SizedBox(height: 80),
-                  EmptyState(
-                    title: 'Impossible de charger les commandes',
-                    subtitle: error is ApiException
-                        ? error.message
-                        : 'Tire vers le bas pour réessayer.',
-                    icon: Icons.cloud_off_rounded,
+                  const SizedBox(height: 28),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 36, 20, 36),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: EmptyState(
+                      title: 'Impossible de charger les commandes',
+                      subtitle: error is ApiException
+                          ? error.message
+                          : 'Tire vers le bas pour réessayer.',
+                      icon: Icons.cloud_off_rounded,
+                    ),
                   ),
                 ],
               ),
@@ -134,14 +143,30 @@ class _VendorOrdersPageState extends ConsumerState<VendorOrdersPage> {
         'L\'historique de tes commandes apparaîtra ici.',
       ];
       return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          const SizedBox(height: 80),
-          EmptyState(
-            title: isHistory && _tab == 3
-                ? 'Pas encore d\'historique'
-                : 'Aucune commande pour l\'instant',
-            subtitle: subtitles[_tab],
-            icon: Icons.receipt_long_rounded,
+          const SizedBox(height: 28),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 36, 20, 36),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.borderLight),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0A1B2A6B),
+                  blurRadius: 20,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            child: EmptyState(
+              title: isHistory && _tab == 3
+                  ? 'Pas encore d\'historique'
+                  : 'Aucune commande pour l\'instant',
+              subtitle: subtitles[_tab],
+              icon: Icons.receipt_long_rounded,
+            ),
           ),
         ],
       );
@@ -194,7 +219,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   void initState() {
     super.initState();
     _remainingSeconds = _computeRemaining();
-    if (widget.order.status.isIncoming) {
+    if (widget.order.status.isIncoming || widget.order.status.isReady) {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() => _remainingSeconds = _computeRemaining());
@@ -206,9 +231,16 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   }
 
   int _computeRemaining() {
-    if (!widget.order.status.isIncoming) return 0;
-    final elapsed = DateTime.now().difference(widget.order.createdAt).inSeconds;
-    return (300 - elapsed).clamp(0, 300);
+    if (widget.order.status.isIncoming) {
+      final elapsed = DateTime.now().difference(widget.order.createdAt).inSeconds;
+      return (300 - elapsed).clamp(0, 300);
+    }
+    if (widget.order.status.isReady) {
+      final start = widget.order.readyAt ?? widget.order.createdAt;
+      final elapsed = DateTime.now().difference(start).inSeconds;
+      return (3600 - elapsed).clamp(0, 3600);
+    }
+    return 0;
   }
 
   @override
@@ -322,6 +354,32 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     }
   }
 
+  Future<void> _showReadySheet() async {
+    final result = await showKabaBottomSheet<String>(
+      context,
+      sheet: _ReadyMessageSheet(
+        pickupCode: widget.order.displayCode,
+      ),
+    );
+    if (result != null && context.mounted) {
+      try {
+        await _orders.markReady(widget.order.id, message: result);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e is ApiException
+                    ? e.message
+                    : 'Mise à jour impossible. Réessaie.',
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
@@ -358,7 +416,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Commande #${_shortId(order.id)}',
+                      'Commande #${order.displayCode}',
                       style: AppTextStyles.orderNum,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -495,23 +553,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               label: 'Marquer comme prête',
               icon: Icons.check_rounded,
               color: AppColors.accent,
-              onPressed: () async {
-                try {
-                  await _orders.markReady(order.id);
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          e is ApiException
-                              ? e.message
-                              : 'Mise à jour impossible.',
-                        ),
-                      ),
-                    );
-                  }
-                }
-              },
+              onPressed: _showReadySheet,
             ),
             const SizedBox(height: 8),
             _OutlineAction(
@@ -522,7 +564,9 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               onPressed: _showCancelSheet,
             ),
           ] else if (order.status.isReady) ...[
-            _ReadyBanner(),
+            _PickupCodeBanner(code: order.displayCode),
+            const SizedBox(height: 12),
+            _ReadyBanner(seconds: _remainingSeconds),
             const SizedBox(height: 12),
             _OutlineAction(
               label: 'Rembourser cette commande',
@@ -579,11 +623,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       return '${o.studentName} · ${o.totalArticles} article${o.totalArticles > 1 ? 's' : ''}';
     }
     if (o.status.isReady && o.readyAt != null) {
-      final ago = DateTime.now().difference(o.readyAt!);
-      if (ago.inMinutes < 60) {
-        return 'Prête depuis ${ago.inMinutes} min';
+      final remaining = 3600 - DateTime.now().difference(o.readyAt!).inSeconds;
+      if (remaining > 0) {
+        final minutes = (remaining / 60).ceil();
+        return 'N° ${o.displayCode} · $minutes min restantes';
       }
-      return 'Prête depuis ${ago.inHours} h';
+      return 'N° ${o.displayCode} · délai de retrait dépassé';
     }
     return 'Reçue à ${_formatTime(o.createdAt)}';
   }
@@ -592,12 +637,6 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     final h = t.hour.toString().padLeft(2, '0');
     final m = t.minute.toString().padLeft(2, '0');
     return '$h:$m';
-  }
-
-  String _shortId(String id) {
-    if (id.isEmpty) return '——';
-    if (id.length <= 6) return id.toUpperCase();
-    return id.substring(id.length - 6).toUpperCase();
   }
 }
 
@@ -643,7 +682,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Commande #${order.id.isEmpty ? '——' : order.id.substring(order.id.length - 6).toUpperCase()}',
+                      'Commande #${order.displayCode}',
                       style: AppTextStyles.orderNum,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -682,6 +721,10 @@ class _HistoryCardState extends State<_HistoryCard> {
                 children: [
                   const Divider(height: 1, color: AppColors.borderLight),
                   const SizedBox(height: 12),
+                  _DetailRow(
+                    'Numéro',
+                    order.displayCode,
+                  ),
                   if (order.items.isNotEmpty)
                     _DetailRow(
                       'Article',
@@ -942,6 +985,9 @@ class _TimelineStep extends StatelessWidget {
 }
 
 class _ReadyBanner extends StatelessWidget {
+  final int seconds;
+  const _ReadyBanner({required this.seconds});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -958,19 +1004,94 @@ class _ReadyBanner extends StatelessWidget {
             children: [
               const Icon(Icons.check_rounded, color: AppColors.green, size: 18),
               const SizedBox(width: 6),
-              Text(
-                'En attente de retrait',
-                style: AppTextStyles.readyBannerTitle,
+              Expanded(
+                child: Text(
+                  seconds > 0
+                      ? 'Retrait · ${CurrencyFormatter.formatCountdown(seconds)}'
+                      : 'Délai de retrait dépassé',
+                  style: AppTextStyles.readyBannerTitle,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 5),
           Text(
-            'L\'étudiant a été notifié. Le montant est déjà crédité sur ton portefeuille. Sans confirmation de sa part sous 1h, la commande sera validée automatiquement.',
+            'L\'étudiant a été notifié. Le montant est crédité. Sans confirmation sous 1 h, la commande est clôturée automatiquement.',
             style: AppTextStyles.readyBannerSub,
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PickupCodeBanner extends StatelessWidget {
+  final String code;
+  const _PickupCodeBanner({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.indigoLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Column(
+        children: [
+          Text(
+            'Numéro à communiquer',
+            style: AppTextStyles.orderMeta,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            code,
+            style: AppTextStyles.orderNum.copyWith(
+              fontSize: 28,
+              letterSpacing: 4,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadyMessageSheet extends StatefulWidget {
+  final String pickupCode;
+  const _ReadyMessageSheet({required this.pickupCode});
+
+  @override
+  State<_ReadyMessageSheet> createState() => _ReadyMessageSheetState();
+}
+
+class _ReadyMessageSheetState extends State<_ReadyMessageSheet> {
+  static const _messages = [
+    'Ta commande est prête. Tu peux passer la récupérer.',
+    'C’est prêt au comptoir. Présente ton numéro de commande.',
+    'Commande prête. Tu as 1 heure pour venir la chercher.',
+  ];
+
+  String? _selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomSheetModal(
+      title: 'Prévenir l’étudiant',
+      subtitle:
+          'Choisis le message envoyé avec le numéro ${widget.pickupCode}. Tes tickets sont crédités à cet instant.',
+      chips: _messages,
+      selectedChip: _selected,
+      onChipSelected: (chip) => setState(() => _selected = chip),
+      confirmText: 'Envoyer et marquer prête',
+      cancelText: 'Retour',
+      isConfirmDanger: false,
+      isConfirmOrange: true,
+      isConfirmEnabled: _selected != null,
+      onCancel: () => Navigator.of(context).pop(),
+      onConfirm: () => Navigator.of(context).pop(_selected),
     );
   }
 }

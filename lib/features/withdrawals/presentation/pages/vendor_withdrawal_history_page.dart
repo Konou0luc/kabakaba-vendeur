@@ -46,6 +46,7 @@ class VendorWithdrawalHistoryPage extends ConsumerWidget {
                     subtitle:
                         'Tes demandes Flooz et Mixx apparaîtront ici, avec le délai pour signaler un problème.',
                     icon: Icons.payments_rounded,
+                    framed: true,
                   );
                 }
                 return RefreshIndicator(
@@ -115,7 +116,8 @@ class _WithdrawalTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0F1B2A6B),

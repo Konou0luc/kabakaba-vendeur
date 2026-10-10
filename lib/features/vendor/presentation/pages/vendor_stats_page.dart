@@ -104,7 +104,7 @@ class _VendorStatsPageState extends ConsumerState<VendorStatsPage> {
         physics: const NeverScrollableScrollPhysics(),
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.55,
+        childAspectRatio: 1.28,
         children: metrics.map((m) => _MetricCard(metric: m)).toList(),
       ),
       const SizedBox(height: 14),
@@ -186,6 +186,7 @@ class _VendorStatsPageState extends ConsumerState<VendorStatsPage> {
             title: 'Pas encore de ventes',
             subtitle: 'Les articles les plus commandés apparaîtront ici.',
             icon: Icons.bar_chart_rounded,
+            framed: true,
           ),
         ),
       ];
@@ -273,9 +274,24 @@ class _MetricCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppColors.indigoLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(metric.icon, size: 16, color: AppColors.primary),
+          ),
+          const SizedBox(height: 10),
           Text(metric.label, style: AppTextStyles.metricLabel),
-          const SizedBox(height: 7),
-          Text(metric.value, style: AppTextStyles.metricValue),
+          const SizedBox(height: 4),
+          Text(
+            metric.value,
+            style: AppTextStyles.metricValue.copyWith(fontSize: 17),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );

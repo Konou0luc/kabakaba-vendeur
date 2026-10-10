@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/vendor_model.dart';
+import '../../../../shared/widgets/remote_photo.dart';
 import '../../../../shared/widgets/vendor_header.dart';
 import '../../../auth/presentation/controllers/vendor_auth_controller.dart';
 import '../../../auth/presentation/pages/vendor_activation_page.dart';
@@ -54,7 +55,6 @@ class _LoadedProfile extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         Container(
-          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
@@ -66,65 +66,107 @@ class _LoadedProfile extends ConsumerWidget {
               ),
             ],
           ),
-          child: Row(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
             children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(17),
-                ),
-                child: Center(
-                  child: Text(
-                    vendor.initials,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
+              RemotePhoto(
+                url: vendor.bannerUrl,
+                width: double.infinity,
+                height: 120,
+                radius: 0,
+                fallback: Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primary, AppColors.indigoDark],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Row(
                   children: [
-                    Text(
-                      vendor.canteenName,
-                      style: AppTextStyles.profileName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.indigoLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            vendor.campusName.isNotEmpty
-                                ? vendor.campusName
-                                : 'Campus UCAO',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                    Transform.translate(
+                      offset: const Offset(0, -18),
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: RemotePhoto(
+                          url: vendor.logoUrl,
+                          width: 64,
+                          height: 64,
+                          radius: 15,
+                          fallback: Center(
+                            child: Text(
+                              vendor.initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
-                        Text('Vendeur actif', style: AppTextStyles.profileMeta),
-                      ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              vendor.canteenName,
+                              style: AppTextStyles.profileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.indigoLight,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    vendor.campusName.isNotEmpty
+                                        ? vendor.campusName
+                                        : 'Campus UCAO',
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  'Vendeur actif',
+                                  style: AppTextStyles.profileMeta,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
